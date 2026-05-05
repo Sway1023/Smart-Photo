@@ -19,12 +19,6 @@ import { UserStatsQueryResponse } from 'src/repositories/user.repository';
 import { BaseService } from 'src/services/base.service';
 import { asHumanReadable } from 'src/utils/bytes';
 import { mimeTypes } from 'src/utils/mime-types';
-import {
-  isDuplicateDetectionEnabled,
-  isFacialRecognitionEnabled,
-  isOcrEnabled,
-  isSmartSearchEnabled,
-} from 'src/utils/misc';
 
 @Injectable()
 export class ServerService extends BaseService {
@@ -86,23 +80,24 @@ export class ServerService extends BaseService {
   }
 
   async getFeatures(): Promise<ServerFeaturesDto> {
-    const { reverseGeocoding, metadata, map, machineLearning, trash, oauth, passwordLogin, notifications } =
-      await this.getConfig({ withCache: false });
+    const { reverseGeocoding, map, trash, oauth, passwordLogin, notifications } = await this.getConfig({
+      withCache: false,
+    });
     const { configFile } = this.configRepository.getEnv();
 
     return {
-      smartSearch: isSmartSearchEnabled(machineLearning),
-      facialRecognition: isFacialRecognitionEnabled(machineLearning),
-      duplicateDetection: isDuplicateDetectionEnabled(machineLearning),
+      smartSearch: false,
+      facialRecognition: false,
+      duplicateDetection: false,
       map: map.enabled,
       reverseGeocoding: reverseGeocoding.enabled,
-      importFaces: metadata.faces.import,
+      importFaces: false,
       sidecar: true,
       search: true,
       trash: trash.enabled,
       oauth: oauth.enabled,
       oauthAutoLaunch: oauth.autoLaunch,
-      ocr: isOcrEnabled(machineLearning),
+      ocr: false,
       passwordLogin: passwordLogin.enabled,
       configFile: !!configFile,
       email: notifications.smtp.enabled,

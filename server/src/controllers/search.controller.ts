@@ -3,19 +3,16 @@ import { ApiTags } from '@nestjs/swagger';
 import { Endpoint, HistoryBuilder } from 'src/decorators';
 import { AssetResponseDto } from 'src/dtos/asset-response.dto';
 import { AuthDto } from 'src/dtos/auth.dto';
-import { PersonResponseDto } from 'src/dtos/person.dto';
 import {
   LargeAssetSearchDto,
   MetadataSearchDto,
   PlacesResponseDto,
   RandomSearchDto,
   SearchExploreResponseDto,
-  SearchPeopleDto,
   SearchPlacesDto,
   SearchResponseDto,
   SearchStatisticsResponseDto,
   SearchSuggestionRequestDto,
-  SmartSearchDto,
   StatisticsSearchDto,
 } from 'src/dtos/search.dto';
 import { ApiTag, Permission } from 'src/enum';
@@ -75,18 +72,6 @@ export class SearchController {
     return this.service.searchLargeAssets(auth, dto);
   }
 
-  @Post('smart')
-  @Authenticated({ permission: Permission.AssetRead })
-  @HttpCode(HttpStatus.OK)
-  @Endpoint({
-    summary: 'Smart asset search',
-    description: 'Perform a smart search for assets by using machine learning vectors to determine relevance.',
-    history: new HistoryBuilder().added('v1').beta('v1').stable('v2'),
-  })
-  searchSmart(@Auth() auth: AuthDto, @Body() dto: SmartSearchDto): Promise<SearchResponseDto> {
-    return this.service.searchSmart(auth, dto);
-  }
-
   @Get('explore')
   @Authenticated({ permission: Permission.AssetRead })
   @Endpoint({
@@ -96,17 +81,6 @@ export class SearchController {
   })
   getExploreData(@Auth() auth: AuthDto): Promise<SearchExploreResponseDto[]> {
     return this.service.getExploreData(auth);
-  }
-
-  @Get('person')
-  @Authenticated({ permission: Permission.PersonRead })
-  @Endpoint({
-    summary: 'Search people',
-    description: 'Search for people by name.',
-    history: new HistoryBuilder().added('v1').beta('v1').stable('v2'),
-  })
-  searchPerson(@Auth() auth: AuthDto, @Query() dto: SearchPeopleDto): Promise<PersonResponseDto[]> {
-    return this.service.searchPerson(auth, dto);
   }
 
   @Get('places')

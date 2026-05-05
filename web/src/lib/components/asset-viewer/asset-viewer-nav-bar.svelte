@@ -10,14 +10,12 @@
   import RemoveAssetFromStack from '$lib/components/asset-viewer/actions/remove-asset-from-stack.svelte';
   import RestoreAction from '$lib/components/asset-viewer/actions/restore-action.svelte';
   import SetAlbumCoverAction from '$lib/components/asset-viewer/actions/set-album-cover-action.svelte';
-  import SetFeaturedPhotoAction from '$lib/components/asset-viewer/actions/set-person-featured-action.svelte';
   import SetProfilePictureAction from '$lib/components/asset-viewer/actions/set-profile-picture-action.svelte';
   import SetStackPrimaryAsset from '$lib/components/asset-viewer/actions/set-stack-primary-asset.svelte';
   import SetVisibilityAction from '$lib/components/asset-viewer/actions/set-visibility-action.svelte';
   import UnstackAction from '$lib/components/asset-viewer/actions/unstack-action.svelte';
   import ButtonContextMenu from '$lib/components/shared-components/context-menu/button-context-menu.svelte';
   import MenuOption from '$lib/components/shared-components/context-menu/menu-option.svelte';
-  import { featureFlagsManager } from '$lib/managers/feature-flags-manager.svelte';
   import { languageManager } from '$lib/managers/language-manager.svelte';
   import { Route } from '$lib/route';
   import { getGlobalActions } from '$lib/services/app.service';
@@ -31,7 +29,6 @@
     AssetVisibility,
     type AlbumResponseDto,
     type AssetResponseDto,
-    type PersonResponseDto,
     type StackResponseDto,
   } from '@immich/sdk';
   import { ActionButton, CommandPaletteDefaultProvider, Tooltip, type ActionItem } from '@immich/ui';
@@ -40,7 +37,6 @@
   import {
     mdiArrowLeft,
     mdiArrowRight,
-    mdiCompare,
     mdiDotsVertical,
     mdiImageSearch,
     mdiPresentationPlay,
@@ -51,7 +47,6 @@
   interface Props {
     asset: AssetResponseDto;
     album?: AlbumResponseDto | null;
-    person?: PersonResponseDto | null;
     stack?: StackResponseDto | null;
     showSlideshow?: boolean;
     preAction: PreAction;
@@ -66,7 +61,6 @@
   let {
     asset,
     album = null,
-    person = null,
     stack = null,
     showSlideshow = false,
     preAction,
@@ -80,8 +74,6 @@
 
   const isOwner = $derived($user && asset.ownerId === $user?.id);
   const isLocked = $derived(asset.visibility === AssetVisibility.Locked);
-  const smartSearchEnabled = $derived(featureFlagsManager.value.smartSearch);
-
   const { Cast } = $derived(getGlobalActions($t));
 
   const Close: ActionItem = $derived({
@@ -170,9 +162,6 @@
         {#if album}
           <SetAlbumCoverAction {asset} {album} />
         {/if}
-        {#if person}
-          <SetFeaturedPhotoAction {asset} {person} {onAction} />
-        {/if}
         {#if asset.type === AssetTypeEnum.Image && !isLocked}
           <SetProfilePictureAction {asset} />
         {/if}
@@ -187,13 +176,6 @@
                 text={$t('view_in_timeline')}
               />
             {/if}
-          {/if}
-          {#if !asset.isArchived && !asset.isTrashed && smartSearchEnabled}
-            <MenuOption
-              icon={mdiCompare}
-              onClick={() => goto(Route.search({ queryAssetId: stack?.primaryAssetId ?? asset.id }))}
-              text={$t('view_similar_photos')}
-            />
           {/if}
         {/if}
 
@@ -210,7 +192,6 @@
         {/if}
         {#if isOwner}
           <hr />
-          <ActionMenuItem action={Actions.RefreshFacesJob} />
           <ActionMenuItem action={Actions.RefreshMetadataJob} />
           <ActionMenuItem action={Actions.RegenerateThumbnailJob} />
           <ActionMenuItem action={Actions.TranscodeVideoJob} />

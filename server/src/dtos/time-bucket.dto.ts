@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString } from 'class-validator';
 import type { BBoxDto } from 'src/dtos/bbox.dto';
-import { AssetOrder, AssetVisibility } from 'src/enum';
+import { AssetOrder, AssetVisibility, CategoryType } from 'src/enum';
 import { ValidateBBox } from 'src/utils/bbox';
 import { ValidateBoolean, ValidateEnum, ValidateUUID } from 'src/validation';
 
@@ -17,6 +17,14 @@ export class TimeBucketDto {
 
   @ValidateUUID({ optional: true, description: 'Filter assets with a specific tag' })
   tagId?: string;
+
+  @ValidateEnum({
+    enum: CategoryType,
+    name: 'CategoryType',
+    optional: true,
+    description: 'Filter assets by a derived media category',
+  })
+  categoryType?: CategoryType;
 
   @ValidateBoolean({
     optional: true,

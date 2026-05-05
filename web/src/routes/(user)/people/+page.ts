@@ -1,18 +1,5 @@
-import { authenticate } from '$lib/utils/auth';
-import { getFormatter } from '$lib/utils/i18n';
-import { getAllPeople } from '@immich/sdk';
+import { Route } from '$lib/route';
+import { redirect } from '@sveltejs/kit';
 import type { PageLoad } from './$types';
 
-export const load = (async ({ url }) => {
-  await authenticate(url);
-
-  const people = await getAllPeople({ withHidden: true });
-  const $t = await getFormatter();
-
-  return {
-    people,
-    meta: {
-      title: $t('people'),
-    },
-  };
-}) satisfies PageLoad;
+export const load = (() => redirect(307, Route.explore())) satisfies PageLoad;

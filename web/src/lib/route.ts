@@ -1,5 +1,5 @@
 import { OpenQueryParam, type SharedLinkTab } from '$lib/constants';
-import { QueueName, type MetadataSearchDto, type SmartSearchDto } from '@immich/sdk';
+import { QueueName, type MetadataSearchDto } from '@immich/sdk';
 import { omitBy } from 'lodash-es';
 
 const asQueueSlug = (name: QueueName) => {
@@ -62,6 +62,13 @@ export const Route = {
   // explore
   explore: () => '/explore',
   places: () => '/places',
+  categories: () => '/categories',
+  viewCategory: ({ id }: { id: string }) => `/categories/${id}`,
+
+  // people
+  people: () => '/people',
+  viewPerson: ({ id }: { id: string }, params?: { previousRoute?: string; action?: 'merge' }) =>
+    `/people/${id}` + asQueryString(params),
 
   // folders
   folders: (params?: { path?: string }) => '/folders' + asQueryString(params),
@@ -85,11 +92,6 @@ export const Route = {
   // partners
   viewPartner: ({ id }: { id: string }) => `/partners/${id}`,
 
-  // people
-  people: () => '/people',
-  viewPerson: ({ id }: { id: string }, params?: { previousRoute?: string; action?: 'merge' }) =>
-    `/people/${id}` + asQueryString(params),
-
   // photos
   photos: (params?: { at?: string }) => '/photos' + asQueryString(params),
   viewAsset: ({ id }: { id: string }) => `/photos/${id}`,
@@ -100,7 +102,7 @@ export const Route = {
   viewTrashedAsset: ({ id }: { id: string }) => `/trash/photos/${id}`,
 
   // search
-  search: (dto?: MetadataSearchDto | SmartSearchDto) => {
+  search: (dto?: MetadataSearchDto) => {
     const metadata = omitBy(dto ?? {}, (value) => value === undefined);
     const query = Object.keys(metadata).length === 0 ? undefined : JSON.stringify(metadata);
     return `/search` + asQueryString({ query });

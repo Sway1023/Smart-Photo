@@ -221,7 +221,6 @@
     cursor={assetCursor}
     {isShared}
     {album}
-    {person}
     onAssetChange={(asset) => {
       timelineManager?.upsertAssets([toTimelineAsset(asset)]);
     }}

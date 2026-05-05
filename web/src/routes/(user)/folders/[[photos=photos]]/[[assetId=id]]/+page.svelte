@@ -2,6 +2,7 @@
   import { afterNavigate, goto, invalidateAll } from '$app/navigation';
   import ActionMenuItem from '$lib/components/ActionMenuItem.svelte';
   import UserPageLayout, { headerId } from '$lib/components/layouts/user-page-layout.svelte';
+  import EmptyPlaceholder from '$lib/components/shared-components/empty-placeholder.svelte';
   import ButtonContextMenu from '$lib/components/shared-components/context-menu/button-context-menu.svelte';
   import GalleryViewer from '$lib/components/shared-components/gallery-viewer/gallery-viewer.svelte';
   import Breadcrumbs from '$lib/components/shared-components/tree/breadcrumbs.svelte';
@@ -24,11 +25,11 @@
   import { getAssetBulkActions } from '$lib/services/asset.service';
   import { AssetInteraction } from '$lib/stores/asset-interaction.svelte';
   import { foldersStore } from '$lib/stores/folders.svelte';
-  import { preferences } from '$lib/stores/user.store';
+  import { preferences, user } from '$lib/stores/user.store';
   import { cancelMultiselect } from '$lib/utils/asset-utils';
   import { toTimelineAsset } from '$lib/utils/timeline-util';
   import { joinPaths } from '$lib/utils/tree-utils';
-  import { ActionButton, CommandPaletteDefaultProvider, IconButton, Text } from '@immich/ui';
+  import { ActionButton, Button, CommandPaletteDefaultProvider, IconButton, Text } from '@immich/ui';
   import { mdiDotsVertical, mdiFolder, mdiFolderHome, mdiFolderOutline, mdiSelectAll } from '@mdi/js';
   import { t } from 'svelte-i18n';
   import type { PageData } from './$types';
@@ -43,6 +44,7 @@
   const assetInteraction = new AssetInteraction();
 
   const handleNavigateToFolder = (folderName: string) => navigateToView(joinPaths(data.tree.path, folderName));
+  const isEmptyFolderView = $derived(data.tree.children.length === 0 && (!data.pathAssets || data.pathAssets.length === 0));
 
   const getLinkForPath = (path: string) => Route.folders({ path });
 
@@ -93,20 +95,38 @@
   <Breadcrumbs node={data.tree} icon={mdiFolderHome} title={$t('folders')} getLink={getLinkForPath} />
 
   <section class="mt-2 h-[calc(100%-(--spacing(25)))] overflow-auto immich-scrollbar">
-    <TreeItemThumbnails items={data.tree.children} icon={mdiFolder} onClick={handleNavigateToFolder} />
+    {#if isEmptyFolderView}
+      <div class="flex min-h-full items-center justify-center py-8">
+        <div class="flex w-full max-w-3xl flex-col items-center gap-4">
+          <EmptyPlaceholder fullWidth text={$t('no_libraries_message')} />
 
-    <!-- Assets -->
-    {#if data.pathAssets && data.pathAssets.length > 0}
-      <div bind:clientHeight={viewport.height} bind:clientWidth={viewport.width} class="mt-2">
-        <GalleryViewer
-          assets={data.pathAssets}
-          {assetInteraction}
-          {viewport}
-          showAssetName={true}
-          pageHeaderOffset={54}
-          onReload={triggerAssetUpdate}
-        />
+          {#if $user.isAdmin}
+            <div class="w-full rounded-3xl border border-[#D4D4D9] bg-[#F5F5F7] px-5 py-4 text-sm text-[#626266] dark:border-immich-dark-gray dark:bg-immich-dark-gray/40 dark:text-immich-dark-fg/80">
+              <p>{$t('admin.library_folder_description')}</p>
+              <div class="mt-3">
+                <Button size="small" color="secondary" variant="ghost" onclick={() => goto(Route.libraries())}>
+                  {$t('external_libraries')}
+                </Button>
+              </div>
+            </div>
+          {/if}
+        </div>
       </div>
+    {:else}
+      <TreeItemThumbnails items={data.tree.children} icon={mdiFolder} onClick={handleNavigateToFolder} />
+
+      {#if data.pathAssets && data.pathAssets.length > 0}
+        <div bind:clientHeight={viewport.height} bind:clientWidth={viewport.width} class="mt-2">
+          <GalleryViewer
+            assets={data.pathAssets}
+            {assetInteraction}
+            {viewport}
+            showAssetName={true}
+            pageHeaderOffset={54}
+            onReload={triggerAssetUpdate}
+          />
+        </div>
+      {/if}
     {/if}
   </section>
 </UserPageLayout>

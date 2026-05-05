@@ -449,6 +449,20 @@ export type AssetStatsResponseDto = {
     /** Number of videos */
     videos: number;
 };
+export type CategoryCoverDto = {
+    /** Asset ID used as the category cover */
+    id: string;
+    /** Base64 encoded thumbhash for the cover asset */
+    thumbhash: string | null;
+};
+export type CategoryItemDto = {
+    /** Number of assets in the category */
+    count: number;
+    /** Latest visible asset used as the category cover */
+    cover: CategoryCoverDto | null;
+    /** Derived category type for the asset collection */
+    type: CategoryType;
+};
 export type AlbumUserResponseDto = {
     /** Album user role */
     role: AlbumUserRole;
@@ -4021,6 +4035,17 @@ export function getAllUserAssetsByDeviceId({ deviceId }: {
     }));
 }
 /**
+ * Get asset categories
+ */
+export function getCategories(opts?: Oazapfts.RequestOpts) {
+    return oazapfts.ok(oazapfts.fetchJson<{
+        status: 200;
+        data: CategoryItemDto[];
+    }>("/assets/categories", {
+        ...opts
+    }));
+}
+/**
  * Check existing assets
  */
 export function checkExistingAssets({ checkExistingAssetsDto }: {
@@ -6416,9 +6441,10 @@ export function tagAssets({ id, bulkIdsDto }: {
 /**
  * Get time bucket
  */
-export function getTimeBucket({ albumId, bbox, isFavorite, isTrashed, key, order, personId, slug, tagId, timeBucket, userId, visibility, withCoordinates, withPartners, withStacked }: {
+export function getTimeBucket({ albumId, bbox, categoryType, isFavorite, isTrashed, key, order, personId, slug, tagId, timeBucket, userId, visibility, withCoordinates, withPartners, withStacked }: {
     albumId?: string;
     bbox?: string;
+    categoryType?: CategoryType;
     isFavorite?: boolean;
     isTrashed?: boolean;
     key?: string;
@@ -6439,6 +6465,7 @@ export function getTimeBucket({ albumId, bbox, isFavorite, isTrashed, key, order
     }>(`/timeline/bucket${QS.query(QS.explode({
         albumId,
         bbox,
+        categoryType,
         isFavorite,
         isTrashed,
         key,
@@ -6459,9 +6486,10 @@ export function getTimeBucket({ albumId, bbox, isFavorite, isTrashed, key, order
 /**
  * Get time buckets
  */
-export function getTimeBuckets({ albumId, bbox, isFavorite, isTrashed, key, order, personId, slug, tagId, userId, visibility, withCoordinates, withPartners, withStacked }: {
+export function getTimeBuckets({ albumId, bbox, categoryType, isFavorite, isTrashed, key, order, personId, slug, tagId, userId, visibility, withCoordinates, withPartners, withStacked }: {
     albumId?: string;
     bbox?: string;
+    categoryType?: CategoryType;
     isFavorite?: boolean;
     isTrashed?: boolean;
     key?: string;
@@ -6481,6 +6509,7 @@ export function getTimeBuckets({ albumId, bbox, isFavorite, isTrashed, key, orde
     }>(`/timeline/buckets${QS.query(QS.explode({
         albumId,
         bbox,
+        categoryType,
         isFavorite,
         isTrashed,
         key,
@@ -6722,13 +6751,15 @@ export function getProfileImage({ id }: {
 /**
  * Retrieve assets by original path
  */
-export function getAssetsByOriginalPath({ path }: {
+export function getAssetsByOriginalPath({ externalOnly, path }: {
     path: string;
+    externalOnly?: boolean;
 }, opts?: Oazapfts.RequestOpts) {
     return oazapfts.ok(oazapfts.fetchJson<{
         status: 200;
         data: AssetResponseDto[];
     }>(`/view/folder${QS.query(QS.explode({
+        externalOnly,
         path
     }))}`, {
         ...opts
@@ -6737,11 +6768,15 @@ export function getAssetsByOriginalPath({ path }: {
 /**
  * Retrieve unique paths
  */
-export function getUniqueOriginalPaths(opts?: Oazapfts.RequestOpts) {
+export function getUniqueOriginalPaths({ externalOnly }: {
+    externalOnly?: boolean;
+} = {}, opts?: Oazapfts.RequestOpts) {
     return oazapfts.ok(oazapfts.fetchJson<{
         status: 200;
         data: string[];
-    }>("/view/folder/unique-paths", {
+    }>(`/view/folder/unique-paths${QS.query(QS.explode({
+        externalOnly
+    }))}`, {
         ...opts
     }));
 }
@@ -6873,6 +6908,12 @@ export enum AssetVisibility {
     Timeline = "timeline",
     Hidden = "hidden",
     Locked = "locked"
+}
+export enum CategoryType {
+    PICTURES = "PICTURES",
+    ANIMATION = "ANIMATION",
+    LIVE_PHOTO = "LIVE_PHOTO",
+    VIDEO = "VIDEO"
 }
 export enum AlbumUserRole {
     Editor = "editor",

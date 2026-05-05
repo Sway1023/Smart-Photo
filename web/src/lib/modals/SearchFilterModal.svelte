@@ -1,14 +1,12 @@
 <script lang="ts" module>
-  import { MediaType, QueryType, validQueryTypes } from '$lib/constants';
+  import { MediaType, QueryType } from '$lib/constants';
   import type { SearchDateFilter } from '../components/shared-components/search-bar/search-date-section.svelte';
   import type { SearchDisplayFilters } from '../components/shared-components/search-bar/search-display-section.svelte';
   import type { SearchLocationFilter } from '../components/shared-components/search-bar/search-location-section.svelte';
 
   export type SearchFilter = {
     query: string;
-    ocr?: string;
-    queryType: 'smart' | 'metadata' | 'description' | 'ocr';
-    personIds: SvelteSet<string>;
+    queryType: 'metadata' | 'description';
     tagIds: SvelteSet<string> | null;
     location: SearchLocationFilter;
     camera: SearchCameraFilter;
@@ -27,14 +25,13 @@
   import SearchDisplaySection from '$lib/components/shared-components/search-bar/search-display-section.svelte';
   import SearchLocationSection from '$lib/components/shared-components/search-bar/search-location-section.svelte';
   import SearchMediaSection from '$lib/components/shared-components/search-bar/search-media-section.svelte';
-  import SearchPeopleSection from '$lib/components/shared-components/search-bar/search-people-section.svelte';
   import SearchRatingsSection from '$lib/components/shared-components/search-bar/search-ratings-section.svelte';
   import SearchTagsSection from '$lib/components/shared-components/search-bar/search-tags-section.svelte';
   import SearchTextSection from '$lib/components/shared-components/search-bar/search-text-section.svelte';
   import { preferences } from '$lib/stores/user.store';
   import { parseUtcDate } from '$lib/utils/date-time';
   import { generateId } from '$lib/utils/generate-id';
-  import { AssetTypeEnum, AssetVisibility, type MetadataSearchDto, type SmartSearchDto } from '@immich/sdk';
+  import { AssetTypeEnum, AssetVisibility, type MetadataSearchDto } from '@immich/sdk';
   import { Button, HStack, Modal, ModalBody, ModalFooter } from '@immich/ui';
   import { mdiTune } from '@mdi/js';
   import type { DateTime } from 'luxon';
@@ -42,8 +39,8 @@
   import { SvelteSet } from 'svelte/reactivity';
 
   interface Props {
-    searchQuery: MetadataSearchDto | SmartSearchDto;
-    onClose: (search?: SmartSearchDto | MetadataSearchDto) => void;
+    searchQuery: MetadataSearchDto;
+    onClose: (search?: MetadataSearchDto) => void;
   }
 
   let { searchQuery, onClose }: Props = $props();
@@ -61,24 +58,16 @@
     localStorage.setItem('searchQueryType', type);
   }
 
-  function defaultQueryType(): QueryType {
+  function defaultQueryType(): SearchFilter['queryType'] {
     const storedQueryType = localStorage.getItem('searchQueryType') as QueryType;
-    return validQueryTypes.has(storedQueryType) ? storedQueryType : QueryType.SMART;
+    return storedQueryType === QueryType.DESCRIPTION ? 'description' : 'metadata';
   }
 
-  let query = '';
-  if ('query' in searchQuery && searchQuery.query) {
-    query = searchQuery.query;
-  }
-  if ('originalFileName' in searchQuery && searchQuery.originalFileName) {
-    query = searchQuery.originalFileName;
-  }
+  let query = searchQuery.originalFileName ?? searchQuery.description ?? '';
 
   let filter: SearchFilter = $state({
     query,
-    ocr: searchQuery.ocr,
-    queryType: defaultQueryType(),
-    personIds: new SvelteSet('personIds' in searchQuery ? searchQuery.personIds : []),
+    queryType: searchQuery.description ? 'description' : defaultQueryType(),
     tagIds:
       'tagIds' in searchQuery
         ? searchQuery.tagIds === null
@@ -116,9 +105,7 @@
   const resetForm = () => {
     filter = {
       query: '',
-      ocr: undefined,
       queryType: defaultQueryType(), // retain from localStorage or default
-      personIds: new SvelteSet(),
       tagIds: new SvelteSet(),
       location: {},
       camera: {},
@@ -143,9 +130,7 @@
 
     const query = filter.query || undefined;
 
-    let payload: SmartSearchDto | MetadataSearchDto = {
-      query: filter.queryType === 'smart' ? query : undefined,
-      ocr: filter.queryType === 'ocr' ? query : undefined,
+    const payload: MetadataSearchDto = {
       originalFileName: filter.queryType === 'metadata' ? query : undefined,
       description: filter.queryType === 'description' ? query : undefined,
       country: filter.location.country,
@@ -159,7 +144,6 @@
       visibility: filter.display.isArchive ? AssetVisibility.Archive : undefined,
       isFavorite: filter.display.isFavorite || undefined,
       isNotInAlbum: filter.display.isNotInAlbum || undefined,
-      personIds: filter.personIds.size > 0 ? [...filter.personIds] : undefined,
       tagIds: filter.tagIds === null ? null : filter.tagIds.size > 0 ? [...filter.tagIds] : undefined,
       type,
       rating: filter.rating,
@@ -189,9 +173,6 @@
   <ModalBody>
     <form id={formId} autocomplete="off" {onsubmit} {onreset}>
       <div class="flex flex-col gap-5 pb-10" tabindex="-1">
-        <!-- PEOPLE -->
-        <SearchPeopleSection bind:selectedPeople={filter.personIds} />
-
         <!-- TEXT -->
         <SearchTextSection bind:query={filter.query} bind:queryType={filter.queryType} />
 

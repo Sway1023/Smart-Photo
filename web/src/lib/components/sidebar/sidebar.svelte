@@ -8,13 +8,22 @@
 
   interface Props {
     ariaLabel?: string;
+    collapsible?: boolean;
+    collapsed?: boolean;
     children?: Snippet;
   }
 
-  let { ariaLabel, children }: Props = $props();
+  let { ariaLabel, collapsible = false, collapsed = false, children }: Props = $props();
 
   const isHidden = $derived(!sidebarStore.isOpen && !mediaQueryManager.isFullSidebar);
   const isExpanded = $derived(sidebarStore.isOpen && !mediaQueryManager.isFullSidebar);
+  const desktopWidthClass = $derived.by(() => {
+    if (!collapsible) {
+      return 'sidebar:w-64';
+    }
+
+    return collapsed ? 'sidebar:w-[5.5rem]' : 'sidebar:w-64';
+  });
 
   onMount(() => {
     closeSidebar();
@@ -35,7 +44,7 @@
   id="sidebar"
   aria-label={ariaLabel}
   tabindex="-1"
-  class="immich-scrollbar relative z-1 w-0 sidebar:w-64 overflow-y-auto overflow-x-hidden pt-8 transition-all duration-200 bg-light"
+  class="immich-scrollbar relative z-10 w-0 overflow-y-auto overflow-x-hidden bg-[#F5F5F7] pt-3 transition-[width] duration-200 dark:bg-immich-dark-bg {desktopWidthClass}"
   class:shadow-2xl={isExpanded}
   class:dark:border-e-immich-dark-gray={isExpanded}
   class:border-r={isExpanded}
@@ -45,7 +54,11 @@
   use:clickOutside={{ onOutclick: closeSidebar, onEscape: closeSidebar }}
   use:focusTrap={{ active: isExpanded }}
 >
-  <div class="pe-6 flex flex-col gap-1 h-max min-h-full">
+  <div
+    class="flex h-max min-h-full flex-col gap-1 pe-3"
+    class:pe-2={collapsible && collapsed}
+    class:pe-3={!collapsible || !collapsed}
+  >
     {@render children?.()}
   </div>
 </nav>

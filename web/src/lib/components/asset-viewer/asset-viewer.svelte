@@ -15,8 +15,6 @@
   import { eventManager } from '$lib/managers/event-manager.svelte';
   import { getAssetActions } from '$lib/services/asset.service';
   import { assetViewingStore } from '$lib/stores/asset-viewing.store';
-  import { isFaceEditMode } from '$lib/stores/face-edit.svelte';
-  import { ocrManager } from '$lib/stores/ocr.svelte';
   import { alwaysLoadOriginalVideo } from '$lib/stores/preferences.store';
   import { SlideshowNavigation, SlideshowState, slideshowStore } from '$lib/stores/slideshow.store';
   import { user } from '$lib/stores/user.store';
@@ -33,7 +31,6 @@
     getStack,
     type AlbumResponseDto,
     type AssetResponseDto,
-    type PersonResponseDto,
     type StackResponseDto,
   } from '@immich/sdk';
   import { CommandPaletteDefaultProvider } from '@immich/ui';
@@ -48,7 +45,6 @@
   import EditorPanel from './editor/editor-panel.svelte';
   import CropArea from './editor/transform-tool/crop-area.svelte';
   import ImagePanoramaViewer from './image-panorama-viewer.svelte';
-  import OcrButton from './ocr-button.svelte';
   import PhotoViewer from './photo-viewer.svelte';
   import SlideshowBar from './slideshow-bar.svelte';
   import VideoViewer from './video-wrapper-viewer.svelte';
@@ -65,7 +61,6 @@
     withStacked?: boolean;
     isShared?: boolean;
     album?: AlbumResponseDto;
-    person?: PersonResponseDto;
     onAssetChange?: (asset: AssetResponseDto) => void;
     preAction?: PreAction;
     onAction?: OnAction;
@@ -80,7 +75,6 @@
     withStacked = false,
     isShared = false,
     album,
-    person,
     onAssetChange,
     preAction,
     onAction,
@@ -315,11 +309,6 @@
         stack = action.stack;
         break;
       }
-      case AssetAction.SET_PERSON_FEATURED_PHOTO: {
-        const assetInfo = await getAssetInfo({ id: asset.id });
-        cursor.current = { ...asset, people: assetInfo.people };
-        break;
-      }
       case AssetAction.RATING: {
         cursor.current = {
           ...asset,
@@ -360,13 +349,6 @@
 
   const refresh = async () => {
     await refreshStack();
-    ocrManager.clear();
-    if (!sharedLink) {
-      if (previewStackedAsset) {
-        await ocrManager.getAssetOcr(previewStackedAsset.id);
-      }
-      await ocrManager.getAssetOcr(asset.id);
-    }
   };
 
   $effect(() => {
@@ -419,14 +401,7 @@
       !activityManager.isLoading,
   );
 
-  const showOcrButton = $derived(
-    $slideshowState === SlideshowState.None &&
-      asset.type === AssetTypeEnum.Image &&
-      !assetViewerManager.isShowEditor &&
-      ocrManager.hasOcrData,
-  );
-
-  const { Tag, TagPeople } = $derived(getAssetActions($t, asset));
+  const { Tag } = $derived(getAssetActions($t, asset));
   const showDetailPanel = $derived(
     asset.hasMetadata &&
       $slideshowState === SlideshowState.None &&
@@ -436,10 +411,6 @@
 
   const onSwipe = (event: SwipeCustomEvent) => {
     if (assetViewerManager.zoom > 1) {
-      return;
-    }
-
-    if (ocrManager.showOverlay) {
       return;
     }
 
@@ -453,7 +424,7 @@
   };
 </script>
 
-<CommandPaletteDefaultProvider name={$t('assets')} actions={[Tag, TagPeople]} />
+<CommandPaletteDefaultProvider name={$t('assets')} actions={[Tag]} />
 <OnEvents {onAssetUpdate} />
 
 <svelte:document bind:fullscreenElement />
@@ -470,7 +441,6 @@
       <AssetViewerNavBar
         {asset}
         {album}
-        {person}
         {stack}
         showSlideshow={true}
         preAction={handlePreAction}
@@ -497,7 +467,7 @@
     </div>
   {/if}
 
-  {#if $slideshowState === SlideshowState.None && showNavigation && !assetViewerManager.isShowEditor && !isFaceEditMode.value && previousAsset}
+  {#if $slideshowState === SlideshowState.None && showNavigation && !assetViewerManager.isShowEditor && previousAsset}
     <div class="my-auto col-span-1 col-start-1 row-span-full row-start-1 justify-self-start">
       <PreviousAssetAction onPreviousAsset={() => navigateAsset('previous')} />
     </div>
@@ -563,14 +533,9 @@
       </div>
     {/if}
 
-    {#if showOcrButton}
-      <div class="absolute bottom-0 end-0 mb-6 me-6">
-        <OcrButton />
-      </div>
-    {/if}
   </div>
 
-  {#if $slideshowState === SlideshowState.None && showNavigation && !assetViewerManager.isShowEditor && !isFaceEditMode.value && nextAsset}
+  {#if $slideshowState === SlideshowState.None && showNavigation && !assetViewerManager.isShowEditor && nextAsset}
     <div class="my-auto col-span-1 col-start-4 row-span-full row-start-1 justify-self-end">
       <NextAssetAction onNextAsset={() => navigateAsset('next')} />
     </div>

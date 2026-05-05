@@ -2,7 +2,16 @@ import { BadRequestException } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { AssetJobName, AssetStatsResponseDto } from 'src/dtos/asset.dto';
 import { AssetEditAction } from 'src/dtos/editing.dto';
-import { AssetFileType, AssetMetadataKey, AssetStatus, AssetType, AssetVisibility, JobName, JobStatus } from 'src/enum';
+import {
+  AssetFileType,
+  AssetMetadataKey,
+  AssetStatus,
+  AssetType,
+  AssetVisibility,
+  CategoryType,
+  JobName,
+  JobStatus,
+} from 'src/enum';
 import { AssetStats } from 'src/repositories/asset.repository';
 import { AssetService } from 'src/services/asset.service';
 import { AssetFactory } from 'test/factories/asset.factory';
@@ -102,6 +111,39 @@ describe(AssetService.name, () => {
       await sut.getRandom(auth, 1);
 
       expect(mocks.asset.getRandom).toHaveBeenCalledWith([auth.user.id, partner.sharedById], 1);
+    });
+  });
+
+  describe('getCategories', () => {
+    it('should map category covers and filter empty categories', async () => {
+      const thumbhash = Buffer.from('thumbhash');
+      mocks.asset.getCategories.mockResolvedValue([
+        {
+          type: CategoryType.Pictures,
+          count: 10,
+          coverId: 'asset-1',
+          coverThumbhash: thumbhash,
+        },
+        {
+          type: CategoryType.Video,
+          count: 0,
+          coverId: null,
+          coverThumbhash: null,
+        },
+      ]);
+
+      await expect(sut.getCategories(authStub.admin)).resolves.toEqual([
+        {
+          type: CategoryType.Pictures,
+          count: 10,
+          cover: {
+            id: 'asset-1',
+            thumbhash: thumbhash.toString('base64'),
+          },
+        },
+      ]);
+
+      expect(mocks.asset.getCategories).toHaveBeenCalledWith(authStub.admin.user.id);
     });
   });
 
@@ -644,52 +686,14 @@ describe(AssetService.name, () => {
     });
   });
 
-  describe('getOcr', () => {
-    it('should require asset read permission', async () => {
-      mocks.access.asset.checkOwnerAccess.mockResolvedValue(new Set());
-
-      await expect(sut.getOcr(authStub.admin, 'asset-1')).rejects.toBeInstanceOf(BadRequestException);
-
-      expect(mocks.ocr.getByAssetId).not.toHaveBeenCalled();
-    });
-
-    it('should return OCR data for an asset', async () => {
-      const ocr1 = factory.assetOcr({ text: 'Hello World' });
-      const ocr2 = factory.assetOcr({ text: 'Test Image' });
-      const asset = AssetFactory.from().exif().build();
-
-      mocks.access.asset.checkOwnerAccess.mockResolvedValue(new Set([asset.id]));
-      mocks.ocr.getByAssetId.mockResolvedValue([ocr1, ocr2]);
-      mocks.asset.getForOcr.mockResolvedValue({ edits: [], ...asset.exifInfo });
-
-      await expect(sut.getOcr(authStub.admin, asset.id)).resolves.toEqual([ocr1, ocr2]);
-
-      expect(mocks.access.asset.checkOwnerAccess).toHaveBeenCalledWith(
-        authStub.admin.user.id,
-        new Set([asset.id]),
-        undefined,
-      );
-      expect(mocks.ocr.getByAssetId).toHaveBeenCalledWith(asset.id);
-    });
-
-    it('should return empty array when no OCR data exists', async () => {
-      const asset = AssetFactory.from().exif().build();
-      mocks.access.asset.checkOwnerAccess.mockResolvedValue(new Set([asset.id]));
-      mocks.ocr.getByAssetId.mockResolvedValue([]);
-      mocks.asset.getForOcr.mockResolvedValue({ edits: [], ...asset.exifInfo });
-      await expect(sut.getOcr(authStub.admin, asset.id)).resolves.toEqual([]);
-
-      expect(mocks.ocr.getByAssetId).toHaveBeenCalledWith(asset.id);
-    });
-  });
-
   describe('run', () => {
-    it('should run the refresh faces job', async () => {
+    it('should reject the refresh faces job', async () => {
       mocks.access.asset.checkOwnerAccess.mockResolvedValue(new Set(['asset-1']));
 
-      await sut.run(authStub.admin, { assetIds: ['asset-1'], name: AssetJobName.REFRESH_FACES });
-
-      expect(mocks.job.queueAll).toHaveBeenCalledWith([{ name: JobName.AssetDetectFaces, data: { id: 'asset-1' } }]);
+      await expect(sut.run(authStub.admin, { assetIds: ['asset-1'], name: AssetJobName.REFRESH_FACES })).rejects.toThrow(
+        'Face processing is not available',
+      );
+      expect(mocks.job.queueAll).not.toHaveBeenCalled();
     });
 
     it('should run the refresh metadata job', async () => {

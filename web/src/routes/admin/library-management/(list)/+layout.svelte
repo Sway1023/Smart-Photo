@@ -82,6 +82,10 @@
 <AdminPageLayout breadcrumbs={[{ title: data.meta.title }]} actions={[ScanAll, Create]}>
   <Container size="large" center class="my-4">
     <div class="flex flex-col items-center gap-2" in:fade={{ duration: 500 }}>
+      <div class="w-full rounded-xl border border-[#D4D4D9] bg-[#F5F5F7] px-4 py-3 text-sm text-[#626266] dark:border-immich-dark-gray dark:bg-immich-dark-gray/40 dark:text-immich-dark-fg/80">
+        {$t('admin.library_folder_description')}
+      </div>
+
       {#if libraries.length > 0}
         <Table striped size="small" spacing="small">
           <TableHeader>

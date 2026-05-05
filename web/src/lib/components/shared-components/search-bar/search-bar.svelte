@@ -7,7 +7,7 @@
   import { searchStore } from '$lib/stores/search.svelte';
   import { handlePromiseError } from '$lib/utils';
   import { generateId } from '$lib/utils/generate-id';
-  import type { MetadataSearchDto, SmartSearchDto } from '@immich/sdk';
+  import type { MetadataSearchDto } from '@immich/sdk';
   import { Button, IconButton, modalManager } from '@immich/ui';
   import { mdiClose, mdiMagnify, mdiTune } from '@mdi/js';
   import { onDestroy, onMount, tick } from 'svelte';
@@ -17,7 +17,7 @@
   interface Props {
     value?: string;
     grayTheme: boolean;
-    searchQuery?: MetadataSearchDto | SmartSearchDto;
+    searchQuery?: MetadataSearchDto;
   }
 
   let { value = $bindable(''), grayTheme, searchQuery = {} }: Props = $props();
@@ -31,7 +31,7 @@
   let selectedId: string | undefined = $state();
   let close: (() => Promise<void>) | undefined;
   let showSearchTypeDropdown = $state(false);
-  let currentSearchType = $state('smart');
+  let currentSearchType = $state('metadata');
 
   const listboxId = generateId();
   const searchTypeId = generateId();
@@ -40,7 +40,7 @@
     searchStore.isSearchEnabled = false;
   });
 
-  const handleSearch = async (payload: SmartSearchDto | MetadataSearchDto) => {
+  const handleSearch = async (payload: MetadataSearchDto) => {
     closeDropdown();
     searchStore.isSearchEnabled = false;
     await goto(Route.search(payload));
@@ -76,23 +76,17 @@
     searchStore.isSearchEnabled = false;
   };
 
-  const buildSearchPayload = (term: string): SmartSearchDto | MetadataSearchDto => {
+  const buildSearchPayload = (term: string): MetadataSearchDto => {
     const searchType = getSearchType();
     switch (searchType) {
-      case 'smart': {
-        return { query: term };
-      }
       case 'metadata': {
         return { originalFileName: term };
       }
       case 'description': {
         return { description: term };
       }
-      case 'ocr': {
-        return { ocr: term };
-      }
       default: {
-        return { query: term };
+        return { originalFileName: term };
       }
     }
   };
@@ -194,36 +188,28 @@
   function getSearchType() {
     const searchType = localStorage.getItem('searchQueryType');
     switch (searchType) {
-      case 'smart':
       case 'metadata':
-      case 'description':
-      case 'ocr': {
+      case 'description': {
         currentSearchType = searchType;
         return searchType;
       }
       default: {
-        currentSearchType = 'smart';
-        return 'smart';
+        currentSearchType = 'metadata';
+        return 'metadata';
       }
     }
   }
 
   function getSearchTypeText(): string {
     switch (currentSearchType) {
-      case 'smart': {
-        return $t('context');
-      }
       case 'metadata': {
         return $t('filename');
       }
       case 'description': {
         return $t('description');
       }
-      case 'ocr': {
-        return $t('ocr');
-      }
       default: {
-        return $t('context');
+        return $t('filename');
       }
     }
   }
@@ -233,10 +219,8 @@
   });
 
   const searchTypes = [
-    { value: 'smart', label: () => $t('context') },
     { value: 'metadata', label: () => $t('filename') },
     { value: 'description', label: () => $t('description') },
-    { value: 'ocr', label: () => $t('ocr') },
   ] as const;
 </script>
 
@@ -247,7 +231,7 @@
   ]}
 />
 
-<div class="w-full relative z-auto" use:focusOutside={{ onFocusOut }} tabindex="-1">
+<div class="relative z-auto w-full max-w-[720px]" use:focusOutside={{ onFocusOut }} tabindex="-1">
   <form
     draggable="false"
     autocomplete="off"
@@ -264,11 +248,13 @@
         type="text"
         name="q"
         id="main-search-bar"
-        class="w-full transition-all border-2 ps-14 py-4 max-md:py-2 text-immich-fg/75 dark:text-immich-dark-fg
+        class="h-12 w-full border ps-14 text-sm text-[#626266] transition-all outline-none dark:text-immich-dark-fg
         {showClearIcon ? 'pe-22.5' : 'pe-14'}
         {grayTheme ? 'dark:bg-immich-dark-gray' : 'dark:bg-immich-dark-bg'}
-        {showSuggestions && isSearchSuggestions ? 'rounded-t-3xl' : 'rounded-3xl bg-gray-200'}
-        {searchStore.isSearchEnabled ? 'border-gray-200 dark:border-gray-700 bg-white' : 'border-transparent'}"
+        {showSuggestions && isSearchSuggestions ? 'rounded-t-xl rounded-b-none' : 'rounded-xl'}
+        {searchStore.isSearchEnabled
+          ? 'border-[#D4D4D9] bg-white shadow-[0_24px_60px_rgba(15,23,42,0.12)] dark:border-immich-dark-gray'
+          : 'border-transparent bg-[#EDEDF2] dark:bg-immich-dark-gray/80'}"
         placeholder={$t('search_your_photos')}
         required
         pattern="^(?!m:$).*$"
@@ -309,13 +295,13 @@
     {#if searchStore.isSearchEnabled}
       <div
         id={searchTypeId}
-        class="absolute inset-y-0 flex items-center end-16"
+        class="absolute inset-y-0 end-16 flex items-center"
         class:max-md:hidden={value}
         class:end-28={value.length > 0}
       >
         <div class="relative" use:focusOutside={{ onFocusOut: closeSearchTypeDropdown }}>
           <Button
-            class="bg-immich-primary text-white dark:bg-immich-dark-primary/90 dark:text-black/75 rounded-full px-3 py-1 text-xs hover:opacity-80 transition-opacity cursor-pointer"
+            class="cursor-pointer rounded-full bg-[#1D1D1F] px-3 py-1 text-xs text-white transition-opacity hover:opacity-80 dark:bg-immich-dark-primary/90 dark:text-black/75"
             onclick={toggleSearchTypeDropdown}
             aria-expanded={showSearchTypeDropdown}
             aria-haspopup="listbox"
@@ -325,13 +311,13 @@
 
           {#if showSearchTypeDropdown}
             <div
-              class="absolute top-full right-0 mt-1 bg-white dark:bg-immich-dark-gray border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg py-1 min-w-32 z-9999"
+              class="absolute right-0 top-full z-9999 mt-2 min-w-32 rounded-xl border border-[#D4D4D9] bg-white py-1 shadow-lg dark:border-gray-600 dark:bg-immich-dark-gray"
             >
               {#each searchTypes as searchType (searchType.value)}
                 <button
                   type="button"
                   tabindex="0"
-                  class="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors
+                  class="w-full px-3 py-2 text-left text-xs transition-colors hover:bg-gray-100 dark:hover:bg-gray-700
                          {currentSearchType === searchType.value ? 'bg-gray-100 dark:bg-gray-700' : ''}"
                   onclick={() => selectSearchType(searchType.value)}
                 >

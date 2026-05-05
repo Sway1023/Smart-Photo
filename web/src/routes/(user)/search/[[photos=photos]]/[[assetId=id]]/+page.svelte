@@ -19,7 +19,6 @@
   import TagAction from '$lib/components/timeline/actions/TagAction.svelte';
   import AssetSelectControlBar from '$lib/components/timeline/AssetSelectControlBar.svelte';
   import { QueryParameter } from '$lib/constants';
-  import { featureFlagsManager } from '$lib/managers/feature-flags-manager.svelte';
   import type { Viewport } from '$lib/managers/timeline-manager/types';
   import { Route } from '$lib/route';
   import { getAssetBulkActions } from '$lib/services/asset.service';
@@ -30,17 +29,14 @@
   import { cancelMultiselect } from '$lib/utils/asset-utils';
   import { parseUtcDate } from '$lib/utils/date-time';
   import { handleError } from '$lib/utils/handle-error';
-  import { isAlbumsRoute, isPeopleRoute } from '$lib/utils/navigation';
+  import { isAlbumsRoute } from '$lib/utils/navigation';
   import { toTimelineAsset } from '$lib/utils/timeline-util';
   import {
     type AlbumResponseDto,
     type AssetResponseDto,
-    getPerson,
     getTagById,
     type MetadataSearchDto,
     searchAssets,
-    searchSmart,
-    type SmartSearchDto,
   } from '@immich/sdk';
   import { ActionButton, CommandPaletteDefaultProvider, Icon, IconButton, LoadingSpinner } from '@immich/ui';
   import { mdiArrowLeft, mdiDotsVertical, mdiImageOffOutline, mdiSelectAll } from '@mdi/js';
@@ -64,9 +60,8 @@
 
   const assetInteraction = new AssetInteraction();
 
-  type SearchTerms = MetadataSearchDto & Pick<SmartSearchDto, 'query' | 'queryAssetId'>;
+  type SearchTerms = MetadataSearchDto;
   let searchQuery = $derived(page.url.searchParams.get(QueryParameter.QUERY));
-  let smartSearchEnabled = $derived(featureFlagsManager.value.smartSearch);
   let terms = $derived<SearchTerms>(searchQuery ? JSON.parse(searchQuery) : {});
 
   $effect(() => {
@@ -88,10 +83,6 @@
       previousRoute = from.url.href;
     }
     const route = from?.route?.id;
-
-    if (isPeopleRoute(route)) {
-      previousRoute = Route.photos();
-    }
 
     if (isAlbumsRoute(route)) {
       previousRoute = Route.explore();
@@ -141,10 +132,7 @@
     };
 
     try {
-      const { albums, assets } =
-        ('query' in searchDto || 'queryAssetId' in searchDto) && smartSearchEnabled
-          ? await searchSmart({ smartSearchDto: { ...searchDto, language: $lang } })
-          : await searchAssets({ metadataSearchDto: searchDto });
+      const { albums, assets } = await searchAssets({ metadataSearchDto: searchDto });
 
       searchResultAlbums.push(...albums.items);
       searchResultAssets.push(...assets.items);
@@ -177,37 +165,17 @@
       isFavorite: $t('favorite'),
       isNotInAlbum: $t('not_in_any_album'),
       type: $t('media_type'),
-      query: $t('context'),
       city: $t('city'),
       country: $t('country'),
       state: $t('state'),
       make: $t('camera_brand'),
       model: $t('camera_model'),
       lensModel: $t('lens_model'),
-      personIds: $t('people'),
       tagIds: $t('tags'),
       originalFileName: $t('file_name_text'),
       description: $t('description'),
-      queryAssetId: $t('query_asset_id'),
-      ocr: $t('ocr'),
     };
     return keyMap[key] || key;
-  }
-
-  async function getPersonName(personIds: string[]) {
-    const personNames = await Promise.all(
-      personIds.map(async (personId) => {
-        const person = await getPerson({ id: personId });
-
-        if (person.name == '') {
-          return $t('no_name');
-        }
-
-        return person.name;
-      }),
-    );
-
-    return personNames.join(', ');
   }
 
   async function getTagNames(tagIds: string[] | null) {
@@ -262,10 +230,6 @@
           <div class="bg-gray-300 py-2 px-4 dark:bg-gray-800 dark:text-white rounded-e-full">
             {#if (searchKey === 'takenAfter' || searchKey === 'takenBefore') && typeof value === 'string'}
               {getHumanReadableDate(value)}
-            {:else if searchKey === 'personIds' && Array.isArray(value)}
-              {#await getPersonName(value) then personName}
-                {personName}
-              {/await}
             {:else if searchKey === 'tagIds' && (Array.isArray(value) || value === null)}
               {#await getTagNames(value) then tagNames}
                 {tagNames}
@@ -378,7 +342,11 @@
         <ControlAppBar onClose={() => goto(previousRoute)} backIcon={mdiArrowLeft}>
           <div class="absolute bg-light"></div>
           <div class="w-full flex-1 ps-4">
-            <SearchBar grayTheme={false} value={terms?.query ?? ''} searchQuery={terms} />
+            <SearchBar
+              grayTheme={false}
+              value={terms?.originalFileName ?? terms?.description ?? ''}
+              searchQuery={terms}
+            />
           </div>
         </ControlAppBar>
       </div>

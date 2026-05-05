@@ -58,6 +58,13 @@ export enum AssetOrder {
   Desc = 'desc',
 }
 
+export enum CategoryType {
+  Pictures = 'PICTURES',
+  Animation = 'ANIMATION',
+  LivePhoto = 'LIVE_PHOTO',
+  Video = 'VIDEO',
+}
+
 export enum DatabaseAction {
   Create = 'CREATE',
   Update = 'UPDATE',

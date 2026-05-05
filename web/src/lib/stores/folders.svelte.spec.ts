@@ -38,5 +38,6 @@ describe('foldersStore', () => {
     expect(firstTree).not.toBeNull();
     expect(secondTree).not.toBeNull();
     expect(secondTree).toEqual(firstTree);
+    expect(getUniqueOriginalPaths).toHaveBeenCalledWith({ externalOnly: true });
   });
 });

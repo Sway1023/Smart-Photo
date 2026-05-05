@@ -8,8 +8,6 @@ import { AuthAdminController } from 'src/controllers/auth-admin.controller';
 import { AuthController } from 'src/controllers/auth.controller';
 import { DatabaseBackupController } from 'src/controllers/database-backup.controller';
 import { DownloadController } from 'src/controllers/download.controller';
-import { DuplicateController } from 'src/controllers/duplicate.controller';
-import { FaceController } from 'src/controllers/face.controller';
 import { JobController } from 'src/controllers/job.controller';
 import { LibraryController } from 'src/controllers/library.controller';
 import { MaintenanceController } from 'src/controllers/maintenance.controller';
@@ -19,7 +17,6 @@ import { NotificationAdminController } from 'src/controllers/notification-admin.
 import { NotificationController } from 'src/controllers/notification.controller';
 import { OAuthController } from 'src/controllers/oauth.controller';
 import { PartnerController } from 'src/controllers/partner.controller';
-import { PersonController } from 'src/controllers/person.controller';
 import { PluginController } from 'src/controllers/plugin.controller';
 import { QueueController } from 'src/controllers/queue.controller';
 import { SearchController } from 'src/controllers/search.controller';
@@ -49,8 +46,6 @@ export const controllers = [
   AuthAdminController,
   DatabaseBackupController,
   DownloadController,
-  DuplicateController,
-  FaceController,
   JobController,
   LibraryController,
   MaintenanceController,
@@ -60,7 +55,6 @@ export const controllers = [
   NotificationAdminController,
   OAuthController,
   PartnerController,
-  PersonController,
   PluginController,
   QueueController,
   SearchController,

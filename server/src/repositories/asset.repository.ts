@@ -17,7 +17,7 @@ import { InjectKysely } from 'nestjs-kysely';
 import { LockableProperty, Stack } from 'src/database';
 import { Chunked, ChunkedArray, DummyValue, GenerateSql } from 'src/decorators';
 import { AuthDto } from 'src/dtos/auth.dto';
-import { AssetFileType, AssetOrder, AssetStatus, AssetType, AssetVisibility } from 'src/enum';
+import { AssetFileType, AssetOrder, AssetStatus, AssetType, AssetVisibility, CategoryType } from 'src/enum';
 import { DB } from 'src/schema';
 import { AssetExifTable } from 'src/schema/tables/asset-exif.table';
 import { AssetFileTable } from 'src/schema/tables/asset-file.table';
@@ -81,6 +81,7 @@ interface AssetBuilderOptions {
   exifInfo?: boolean;
   status?: AssetStatus;
   assetType?: AssetType;
+  categoryType?: CategoryType;
   visibility?: AssetVisibility;
   withCoordinates?: boolean;
   bbox?: BoundingBox;
@@ -93,6 +94,16 @@ export interface TimeBucketOptions extends AssetBuilderOptions {
 export interface TimeBucketItem {
   timeBucket: string;
   count: number;
+}
+
+interface CategoryCountRow {
+  count: number;
+  coverId: string | null;
+  coverThumbhash: Buffer | null;
+}
+
+interface CategoryResult extends CategoryCountRow {
+  type: CategoryType;
 }
 
 export interface YearMonthDay {
@@ -166,6 +177,38 @@ const withBoundingBox = <T>(qb: SelectQueryBuilder<DB, 'asset' | 'asset_exif', T
   return withLatitude.where((eb) =>
     eb.or([eb('asset_exif.longitude', '>=', west), eb('asset_exif.longitude', '<=', east)]),
   );
+};
+
+const applyCategoryFilter = <T>(qb: SelectQueryBuilder<DB, 'asset', T>, categoryType?: CategoryType) => {
+  if (!categoryType) {
+    return qb;
+  }
+
+  switch (categoryType) {
+    case CategoryType.Video: {
+      return qb.where('asset.type', '=', AssetType.Video);
+    }
+
+    case CategoryType.LivePhoto: {
+      return qb
+        .where('asset.type', '=', AssetType.Image)
+        .where('asset.livePhotoVideoId', 'is not', null);
+    }
+
+    case CategoryType.Animation: {
+      return qb
+        .where('asset.type', '=', AssetType.Image)
+        .where('asset.livePhotoVideoId', 'is', null)
+        .where('asset.duration', 'is not', null);
+    }
+
+    case CategoryType.Pictures: {
+      return qb
+        .where('asset.type', '=', AssetType.Image)
+        .where('asset.livePhotoVideoId', 'is', null)
+        .where('asset.duration', 'is', null);
+    }
+  }
 };
 
 @Injectable()
@@ -692,6 +735,40 @@ export class AssetRepository {
       .execute();
   }
 
+  async getCategories(ownerId: string): Promise<CategoryResult[]> {
+    const getCategory = async (type: CategoryType): Promise<CategoryResult> => {
+      const row = await applyCategoryFilter(
+        this.db
+          .selectFrom('asset')
+          .select((eb) => eb.fn.countAll<number>().as('count'))
+          .select(sql<string | null>`(array_agg(asset.id order by asset."fileCreatedAt" desc, asset."createdAt" desc))[1]`.as('coverId'))
+          .select(
+            sql<Buffer | null>`(array_agg(asset.thumbhash order by asset."fileCreatedAt" desc, asset."createdAt" desc))[1]`.as(
+              'coverThumbhash',
+            ),
+          )
+          .where('asset.ownerId', '=', asUuid(ownerId))
+          .where('asset.deletedAt', 'is', null)
+          .$call(withDefaultVisibility),
+        type,
+      ).executeTakeFirstOrThrow();
+
+      return {
+        type,
+        count: row.count,
+        coverId: row.coverId,
+        coverThumbhash: row.coverThumbhash,
+      };
+    };
+
+    return await Promise.all([
+      getCategory(CategoryType.Pictures),
+      getCategory(CategoryType.Animation),
+      getCategory(CategoryType.LivePhoto),
+      getCategory(CategoryType.Video),
+    ]);
+  }
+
   @GenerateSql({ params: [{}] })
   async getTimeBuckets(options: TimeBucketOptions): Promise<TimeBucketItem[]> {
     return this.db
@@ -736,7 +813,8 @@ export class AssetRepository {
           .$if(options.isDuplicate !== undefined, (qb) =>
             qb.where('asset.duplicateId', options.isDuplicate ? 'is not' : 'is', null),
           )
-          .$if(!!options.tagId, (qb) => withTagId(qb, options.tagId!)),
+          .$if(!!options.tagId, (qb) => withTagId(qb, options.tagId!))
+          .$call((qb) => applyCategoryFilter(qb, options.categoryType)),
       )
       .selectFrom('asset')
       .select(sql<string>`("timeBucket" AT TIME ZONE 'UTC')::date::text`.as('timeBucket'))
@@ -848,6 +926,7 @@ export class AssetRepository {
           )
           .$if(!!options.isTrashed, (qb) => qb.where('asset.status', '!=', AssetStatus.Deleted))
           .$if(!!options.tagId, (qb) => withTagId(qb, options.tagId!))
+          .$call((qb) => applyCategoryFilter(qb, options.categoryType))
           .orderBy(sql`(asset."localDateTime" AT TIME ZONE 'UTC')::date`, order)
           .orderBy('asset.fileCreatedAt', order),
       )

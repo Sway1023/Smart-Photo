@@ -33,27 +33,6 @@ services:
     healthcheck:
       disable: false
 
-  immich-machine-learning:
-    container_name: immich_machine_learning
-    image: immich-machine-learning:latest
-    # extends:
-    #   file: hwaccel.ml.yml
-    #   service: cpu # set to one of [armnn, cuda, rocm, openvino, openvino-wsl, rknn] for accelerated inference
-    build:
-      context: ../machine-learning
-      dockerfile: Dockerfile
-      args:
-        - DEVICE=cpu # set to one of [armnn, cuda, rocm, openvino, openvino-wsl, rknn] for accelerated inference
-    ports:
-      - 3003:3003
-    volumes:
-      - model-cache:/cache
-    env_file:
-      - .env
-    restart: always
-    healthcheck:
-      disable: false
-
   redis:
     container_name: immich_redis
     image: docker.io/valkey/valkey:9@sha256:3eeb09785cd61ec8e3be35f8804c8892080f3ca21934d628abc24ee4ed1698f6
@@ -102,6 +81,5 @@ services:
       - grafana-data:/var/lib/grafana
 
 volumes:
-  model-cache:
   prometheus-data:
   grafana-data:

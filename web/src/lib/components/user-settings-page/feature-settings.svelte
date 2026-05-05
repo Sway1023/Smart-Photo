@@ -1,6 +1,8 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import SettingAccordion from '$lib/components/shared-components/settings/setting-accordion.svelte';
-  import { preferences } from '$lib/stores/user.store';
+  import { Route } from '$lib/route';
+  import { preferences, user } from '$lib/stores/user.store';
   import { handleError } from '$lib/utils/handle-error';
   import { AssetOrder, updateMyPreferences } from '@immich/sdk';
   import { Button, Field, NumberInput, Select, Switch, toastManager } from '@immich/ui';
@@ -92,6 +94,17 @@
               <Field label={$t('sidebar')} description={$t('sidebar_display_description')}>
                 <Switch bind:checked={foldersSidebar} />
               </Field>
+
+              {#if $user.isAdmin}
+                <div class="rounded-xl border border-[#D4D4D9] bg-[#F5F5F7] px-4 py-3 text-sm text-[#626266] dark:border-immich-dark-gray dark:bg-immich-dark-gray/40 dark:text-immich-dark-fg/80">
+                  <p>{$t('admin.library_folder_description')}</p>
+                  <div class="mt-3">
+                    <Button size="small" color="secondary" variant="ghost" onclick={() => goto(Route.libraries())}>
+                      {$t('external_libraries')}
+                    </Button>
+                  </div>
+                </div>
+              {/if}
             {/if}
           </div>
         </SettingAccordion>

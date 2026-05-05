@@ -11,7 +11,6 @@ import { CliService } from 'src/services/cli.service';
 import { DatabaseBackupService } from 'src/services/database-backup.service';
 import { DatabaseService } from 'src/services/database.service';
 import { DownloadService } from 'src/services/download.service';
-import { DuplicateService } from 'src/services/duplicate.service';
 import { JobService } from 'src/services/job.service';
 import { LibraryService } from 'src/services/library.service';
 import { MaintenanceService } from 'src/services/maintenance.service';
@@ -21,16 +20,13 @@ import { MemoryService } from 'src/services/memory.service';
 import { MetadataService } from 'src/services/metadata.service';
 import { NotificationAdminService } from 'src/services/notification-admin.service';
 import { NotificationService } from 'src/services/notification.service';
-import { OcrService } from 'src/services/ocr.service';
 import { PartnerService } from 'src/services/partner.service';
-import { PersonService } from 'src/services/person.service';
 import { PluginService } from 'src/services/plugin.service';
 import { QueueService } from 'src/services/queue.service';
 import { SearchService } from 'src/services/search.service';
 import { ServerService } from 'src/services/server.service';
 import { SessionService } from 'src/services/session.service';
 import { SharedLinkService } from 'src/services/shared-link.service';
-import { SmartInfoService } from 'src/services/smart-info.service';
 import { StackService } from 'src/services/stack.service';
 import { StorageTemplateService } from 'src/services/storage-template.service';
 import { StorageService } from 'src/services/storage.service';
@@ -61,7 +57,6 @@ export const services = [
   DatabaseBackupService,
   DatabaseService,
   DownloadService,
-  DuplicateService,
   JobService,
   LibraryService,
   MaintenanceService,
@@ -71,16 +66,13 @@ export const services = [
   MetadataService,
   NotificationService,
   NotificationAdminService,
-  OcrService,
   PartnerService,
-  PersonService,
   PluginService,
   QueueService,
   SearchService,
   ServerService,
   SessionService,
   SharedLinkService,
-  SmartInfoService,
   StackService,
   StorageService,
   StorageTemplateService,

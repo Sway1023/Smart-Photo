@@ -9,7 +9,7 @@ export class ViewRepository {
   constructor(@InjectKysely() private db: Kysely<DB>) {}
 
   @GenerateSql({ params: [DummyValue.UUID] })
-  async getUniqueOriginalPaths(userId: string) {
+  async getUniqueOriginalPaths(userId: string, options?: { externalOnly?: boolean }) {
     const results = await this.db
       .selectFrom('asset')
       .select((eb) => eb.fn<string>('substring', ['asset.originalPath', eb.val('^(.*/)[^/]*$')]).as('directoryPath'))
@@ -20,6 +20,7 @@ export class ViewRepository {
       .where('fileCreatedAt', 'is not', null)
       .where('fileModifiedAt', 'is not', null)
       .where('localDateTime', 'is not', null)
+      .$if(!!options?.externalOnly, (qb) => qb.where('libraryId', 'is not', null))
       .orderBy('directoryPath', 'asc')
       .execute();
 
@@ -27,7 +28,7 @@ export class ViewRepository {
   }
 
   @GenerateSql({ params: [DummyValue.UUID, DummyValue.STRING] })
-  async getAssetsByOriginalPath(userId: string, partialPath: string) {
+  async getAssetsByOriginalPath(userId: string, partialPath: string, options?: { externalOnly?: boolean }) {
     const normalizedPath = partialPath.replaceAll(/\/$/g, '');
 
     return this.db
@@ -40,6 +41,7 @@ export class ViewRepository {
       .where('fileCreatedAt', 'is not', null)
       .where('fileModifiedAt', 'is not', null)
       .where('localDateTime', 'is not', null)
+      .$if(!!options?.externalOnly, (qb) => qb.where('libraryId', 'is not', null))
       .where('originalPath', 'like', `%${normalizedPath}/%`)
       .where('originalPath', 'not like', `%${normalizedPath}/%/%`)
       .orderBy(

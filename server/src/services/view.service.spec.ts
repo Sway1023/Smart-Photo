@@ -22,10 +22,10 @@ describe(ViewService.name, () => {
       const mockPaths = ['path1', 'path2', 'path3'];
       mocks.view.getUniqueOriginalPaths.mockResolvedValue(mockPaths);
 
-      const result = await sut.getUniqueOriginalPaths(authStub.admin);
+      const result = await sut.getUniqueOriginalPaths(authStub.admin, { externalOnly: true });
 
       expect(result).toEqual(mockPaths);
-      expect(mocks.view.getUniqueOriginalPaths).toHaveBeenCalledWith(authStub.admin.user.id);
+      expect(mocks.view.getUniqueOriginalPaths).toHaveBeenCalledWith(authStub.admin.user.id, { externalOnly: true });
     });
   });
 
@@ -42,9 +42,11 @@ describe(ViewService.name, () => {
 
       mocks.view.getAssetsByOriginalPath.mockResolvedValue(mockAssets as any);
 
-      const result = await sut.getAssetsByOriginalPath(authStub.admin, path);
+      const result = await sut.getAssetsByOriginalPath(authStub.admin, { path, externalOnly: true });
       expect(result).toEqual(mockAssetReponseDto);
-      await expect(mocks.view.getAssetsByOriginalPath(authStub.admin.user.id, path)).resolves.toEqual(mockAssets);
+      await expect(
+        mocks.view.getAssetsByOriginalPath(authStub.admin.user.id, path, { externalOnly: true }),
+      ).resolves.toEqual(mockAssets);
     });
   });
 });

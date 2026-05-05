@@ -50,10 +50,10 @@
 
 <svelte:window bind:innerWidth />
 
-<nav id="dashboard-navbar" class="max-md:h-(--navbar-height-md) h-(--navbar-height) w-dvw text-sm">
+<nav id="dashboard-navbar" class="h-(--navbar-height) max-md:h-(--navbar-height-md) w-full text-sm">
   <SkipLink text={$t('skip_to_content')} />
   <div
-    class="grid h-full grid-cols-[--spacing(32)_auto] items-center py-2 sidebar:grid-cols-[--spacing(64)_auto] {noBorder
+    class="grid h-full grid-cols-[--spacing(32)_minmax(0,1fr)] items-center py-2 sidebar:grid-cols-[--spacing(64)_minmax(0,1fr)] {noBorder
       ? ''
       : 'border-b'}"
   >
@@ -81,7 +81,7 @@
         <Logo variant={mediaQueryManager.isFullSidebar ? 'inline' : 'icon'} class="max-md:h-12" />
       </a>
     </div>
-    <div class="flex justify-between gap-4 lg:gap-8 pe-6">
+    <div class="flex min-w-0 justify-between gap-4 pe-4 lg:gap-8 lg:pe-6">
       <div class="hidden w-full max-w-5xl flex-1 tall:ps-0 sm:block">
         {#if featureFlagsManager.value.search}
           <SearchBar grayTheme={true} />

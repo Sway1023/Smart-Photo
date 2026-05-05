@@ -94,7 +94,7 @@
   {#if isOpen && isSearchSuggestions}
     <div
       transition:fly={{ y: 25, duration: 150 }}
-      class="absolute w-full rounded-b-3xl border-2 border-t-0 border-gray-200 bg-white pb-5 shadow-2xl transition-all dark:border-gray-700 dark:bg-immich-dark-gray dark:text-gray-300 z-1"
+      class="absolute z-1 w-full rounded-b-xl border border-t-0 border-[#D4D4D9] bg-white pb-5 shadow-[0_24px_60px_rgba(15,23,42,0.12)] transition-all dark:border-gray-700 dark:bg-immich-dark-gray dark:text-gray-300"
     >
       <div class="flex items-center justify-between px-5 pt-5 text-xs">
         <Text class="py-2" color="muted" aria-hidden={true}>{$t('recent_searches')}</Text>

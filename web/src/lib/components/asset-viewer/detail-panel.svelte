@@ -10,11 +10,9 @@
   import { featureFlagsManager } from '$lib/managers/feature-flags-manager.svelte';
   import AssetChangeDateModal from '$lib/modals/AssetChangeDateModal.svelte';
   import { Route } from '$lib/route';
-  import { isFaceEditMode } from '$lib/stores/face-edit.svelte';
-  import { boundingBoxesArray } from '$lib/stores/people.store';
   import { locale } from '$lib/stores/preferences.store';
   import { preferences, user } from '$lib/stores/user.store';
-  import { getAssetMediaUrl, getPeopleThumbnailUrl } from '$lib/utils';
+  import { getAssetMediaUrl } from '$lib/utils';
   import { delay, getDimensions } from '$lib/utils/asset-utils';
   import { getByteUnitString } from '$lib/utils/byte-units';
   import { handleError } from '$lib/utils/handle-error';
@@ -23,7 +21,6 @@
   import {
     AssetMediaSize,
     getAllAlbums,
-    getAssetInfo,
     type AlbumResponseDto,
     type AssetResponseDto,
   } from '@immich/sdk';
@@ -33,18 +30,12 @@
     mdiCamera,
     mdiCameraIris,
     mdiClose,
-    mdiEye,
-    mdiEyeOff,
     mdiImageOutline,
     mdiInformationOutline,
     mdiPencil,
-    mdiPlus,
   } from '@mdi/js';
-  import { DateTime } from 'luxon';
   import { t } from 'svelte-i18n';
   import { slide } from 'svelte/transition';
-  import ImageThumbnail from '../assets/thumbnail/image-thumbnail.svelte';
-  import PersonSidePanel from '../faces-page/person-side-panel.svelte';
   import OnEvents from '../OnEvents.svelte';
   import UserAvatar from '../shared-components/user-avatar.svelte';
   import AlbumListItemDetails from './album-list-item-details.svelte';
@@ -57,11 +48,7 @@
   let { asset, currentAlbum = null }: Props = $props();
 
   let showAssetPath = $state(false);
-  let showEditFaces = $state(false);
   let isOwner = $derived($user?.id === asset.ownerId);
-  let people = $derived(asset.people || []);
-  let unassignedFaces = $derived(asset.unassignedFaces || []);
-  let showingHiddenPeople = $state(false);
   let timeZone = $derived(asset.exifInfo?.timeZone ?? undefined);
   let dateTime = $derived(
     timeZone && asset.exifInfo?.dateTimeOriginal
@@ -79,8 +66,6 @@
     })(),
   );
   let previousId: string | undefined = $state();
-  let previousRoute = $derived(currentAlbum?.id ? Route.viewAlbum(currentAlbum) : Route.photos());
-
   const refreshAlbums = async () => {
     if (authManager.isSharedLink) {
       return [];
@@ -106,7 +91,6 @@
       return;
     }
 
-    showEditFaces = false;
     previousId = asset.id;
   });
 
@@ -120,15 +104,8 @@
     return undefined;
   };
 
-  const handleRefreshPeople = async () => {
-    asset = await getAssetInfo({ id: asset.id });
-    showEditFaces = false;
-  };
-
-  const getAssetFolderHref = (asset: AssetResponseDto) => {
-    // Remove the last part of the path to get the parent path
-    return Route.folders({ path: getParentPath(asset.originalPath) });
-  };
+  const isScannedAsset = $derived(!!asset.libraryId);
+  const getAssetFolderHref = (asset: AssetResponseDto) => Route.folders({ path: getParentPath(asset.originalPath) });
 
   const toggleAssetPath = () => (showAssetPath = !showAssetPath);
 
@@ -184,106 +161,6 @@
 
   <DetailPanelDescription {asset} {isOwner} />
   <DetailPanelRating {asset} {isOwner} />
-
-  {#if !authManager.isSharedLink && isOwner}
-    <section class="px-4 pt-4 text-sm">
-      <div class="flex h-10 w-full items-center justify-between">
-        <Text size="small" color="muted">{$t('people')}</Text>
-        <div class="flex gap-2 items-center">
-          {#if people.some((person) => person.isHidden)}
-            <IconButton
-              aria-label={$t('show_hidden_people')}
-              icon={showingHiddenPeople ? mdiEyeOff : mdiEye}
-              size="medium"
-              shape="round"
-              color="secondary"
-              variant="ghost"
-              onclick={() => (showingHiddenPeople = !showingHiddenPeople)}
-            />
-          {/if}
-          <IconButton
-            aria-label={$t('tag_people')}
-            icon={mdiPlus}
-            size="medium"
-            shape="round"
-            color="secondary"
-            variant="ghost"
-            onclick={() => (isFaceEditMode.value = !isFaceEditMode.value)}
-          />
-
-          {#if people.length > 0 || unassignedFaces.length > 0}
-            <IconButton
-              aria-label={$t('edit_people')}
-              icon={mdiPencil}
-              size="medium"
-              shape="round"
-              color="secondary"
-              variant="ghost"
-              onclick={() => (showEditFaces = true)}
-            />
-          {/if}
-        </div>
-      </div>
-
-      <div class="mt-2 flex flex-wrap gap-2">
-        {#each people as person, index (person.id)}
-          {#if showingHiddenPeople || !person.isHidden}
-            <a
-              class="w-22"
-              href={Route.viewPerson(person, { previousRoute })}
-              onfocus={() => ($boundingBoxesArray = people[index].faces)}
-              onblur={() => ($boundingBoxesArray = [])}
-              onmouseover={() => ($boundingBoxesArray = people[index].faces)}
-              onmouseleave={() => ($boundingBoxesArray = [])}
-            >
-              <div class="relative">
-                <ImageThumbnail
-                  curve
-                  shadow
-                  url={getPeopleThumbnailUrl(person)}
-                  altText={person.name}
-                  title={person.name}
-                  widthStyle="90px"
-                  heightStyle="90px"
-                  hidden={person.isHidden}
-                />
-              </div>
-              <p class="mt-1 truncate font-medium" title={person.name}>{person.name}</p>
-              {#if person.birthDate}
-                {@const personBirthDate = DateTime.fromISO(person.birthDate)}
-                {@const age = Math.floor(DateTime.fromISO(asset.localDateTime).diff(personBirthDate, 'years').years)}
-                {@const ageInMonths = Math.floor(
-                  DateTime.fromISO(asset.localDateTime).diff(personBirthDate, 'months').months,
-                )}
-                {#if age >= 0}
-                  <p
-                    class="font-light"
-                    title={personBirthDate.toLocaleString(
-                      {
-                        month: 'long',
-                        day: 'numeric',
-                        year: 'numeric',
-                      },
-                      { locale: $locale },
-                    )}
-                  >
-                    {#if ageInMonths <= 11}
-                      {$t('age_months', { values: { months: ageInMonths } })}
-                    {:else if ageInMonths > 12 && ageInMonths <= 23}
-                      {$t('age_year_months', { values: { months: ageInMonths - 12 } })}
-                    {:else}
-                      {$t('age_years', { values: { years: age } })}
-                    {/if}
-                  </p>
-                {/if}
-              {/if}
-            </a>
-          {/if}
-        {/each}
-      </div>
-    </section>
-  {/if}
-
   <div class="px-4 py-4">
     {#if asset.exifInfo}
       <div class="flex h-10 w-full items-center justify-between text-sm">
@@ -373,10 +250,14 @@
         </p>
         {#if showAssetPath}
           <p class="text-xs opacity-50 break-all pb-2 hover:text-primary" transition:slide={{ duration: 250 }}>
-            <!-- eslint-disable-next-line svelte/no-navigation-without-resolve this is supposed to be treated as an absolute/external link -->
-            <a href={getAssetFolderHref(asset)} title={$t('go_to_folder')} class="whitespace-pre-wrap">
-              {asset.originalPath}
-            </a>
+            {#if isScannedAsset}
+              <!-- eslint-disable-next-line svelte/no-navigation-without-resolve this is supposed to be treated as an absolute/external link -->
+              <a href={getAssetFolderHref(asset)} title={$t('go_to_folder')} class="whitespace-pre-wrap">
+                {asset.originalPath}
+              </a>
+            {:else}
+              <span class="whitespace-pre-wrap">{asset.originalPath}</span>
+            {/if}
           </p>
         {/if}
         {#if (asset.exifInfo?.exifImageHeight && asset.exifInfo?.exifImageWidth) || asset.exifInfo?.fileSizeInByte}
@@ -492,7 +373,7 @@
         zoom={12.5}
         simplified
         useLocationPin
-        showSimpleControls={!showEditFaces}
+        showSimpleControls={true}
         onOpenInMapView={() => goto(Route.map({ ...latlng, zoom: 12.5 }))}
       >
         {#snippet popup({ marker })}
@@ -570,11 +451,3 @@
   </section>
 {/if}
 
-{#if showEditFaces}
-  <PersonSidePanel
-    assetId={asset.id}
-    assetType={asset.type}
-    onClose={() => (showEditFaces = false)}
-    onRefresh={handleRefreshPeople}
-  />
-{/if}

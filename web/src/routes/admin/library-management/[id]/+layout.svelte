@@ -60,6 +60,7 @@
   <Container size="large" center>
     <div class="grid gap-4 grid-cols-1 lg:grid-cols-2 w-full">
       <Heading tag="h1" size="large" class="col-span-full my-4">{library.name}</Heading>
+      <p class="col-span-full text-sm text-[#626266] dark:text-immich-dark-fg/80">{$t('admin.library_folder_description')}</p>
       <div class="flex flex-col lg:flex-row gap-4 col-span-full">
         <ServerStatisticsCard icon={mdiCameraIris} title={$t('photos')} value={statistics.photos} />
         <ServerStatisticsCard icon={mdiPlayCircle} title={$t('videos')} value={statistics.videos} />
