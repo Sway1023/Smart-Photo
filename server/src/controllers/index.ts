@@ -17,7 +17,6 @@ import { NotificationAdminController } from 'src/controllers/notification-admin.
 import { NotificationController } from 'src/controllers/notification.controller';
 import { OAuthController } from 'src/controllers/oauth.controller';
 import { PartnerController } from 'src/controllers/partner.controller';
-import { PluginController } from 'src/controllers/plugin.controller';
 import { QueueController } from 'src/controllers/queue.controller';
 import { SearchController } from 'src/controllers/search.controller';
 import { ServerController } from 'src/controllers/server.controller';
@@ -33,7 +32,6 @@ import { TrashController } from 'src/controllers/trash.controller';
 import { UserAdminController } from 'src/controllers/user-admin.controller';
 import { UserController } from 'src/controllers/user.controller';
 import { ViewController } from 'src/controllers/view.controller';
-import { WorkflowController } from 'src/controllers/workflow.controller';
 
 export const controllers = [
   ApiKeyController,
@@ -55,7 +53,6 @@ export const controllers = [
   NotificationAdminController,
   OAuthController,
   PartnerController,
-  PluginController,
   QueueController,
   SearchController,
   ServerController,
@@ -71,5 +68,4 @@ export const controllers = [
   UserAdminController,
   UserController,
   ViewController,
-  WorkflowController,
 ];

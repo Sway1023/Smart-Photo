@@ -1,17 +1,16 @@
 $ErrorActionPreference = 'Stop'
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$repoRoot = Split-Path -Parent $scriptDir
 $composeFile = Join-Path $scriptDir 'docker-compose.prod.yml'
 $envFile = Join-Path $scriptDir '.env'
 $dockerDesktop = 'C:\Program Files\Docker\Docker\Docker Desktop.exe'
 
 if (-not (Test-Path $envFile)) {
-  throw "缺少环境文件: $envFile"
+  throw "Missing env file: $envFile"
 }
 
 if (-not (Test-Path $dockerDesktop)) {
-  throw "未找到 Docker Desktop: $dockerDesktop"
+  throw "Docker Desktop not found: $dockerDesktop"
 }
 
 Start-Process -FilePath $dockerDesktop -WindowStyle Hidden | Out-Null
@@ -28,7 +27,7 @@ for ($i = 0; $i -lt 60; $i++) {
 }
 
 if (-not $ready) {
-  throw 'Docker 守护进程未在预期时间内启动'
+  throw 'Docker daemon did not become ready in time'
 }
 
 $containerIds = docker ps -aq

@@ -38,7 +38,6 @@
     [QueueName.Library]: $t('external_libraries'),
     [QueueName.Notifications]: $t('notifications'),
     [QueueName.BackupDatabase]: $t('admin.backup_database'),
-    [QueueName.Workflow]: $t('workflows'),
     [QueueName.Editor]: $t('editor'),
   });
 </script>

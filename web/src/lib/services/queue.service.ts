@@ -29,7 +29,6 @@ import {
   mdiPencil,
   mdiPlay,
   mdiPlus,
-  mdiStateMachine,
   mdiTable,
   mdiTrashCanOutline,
   mdiTrayFull,
@@ -208,10 +207,6 @@ export const asQueueItem = ($t: MessageFormatter, queue: { name: QueueName }): Q
     [QueueName.BackupDatabase]: {
       icon: mdiDatabaseOutline,
       title: $t('admin.backup_database'),
-    },
-    [QueueName.Workflow]: {
-      icon: mdiStateMachine,
-      title: $t('workflows'),
     },
     [QueueName.Editor]: {
       icon: mdiPencil,

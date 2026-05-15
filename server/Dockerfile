@@ -33,30 +33,7 @@ RUN --mount=type=cache,id=pnpm-web,target=/buildcache/pnpm-store \
   --mount=type=bind,source=pnpm-lock.yaml,target=pnpm-lock.yaml \
   --mount=type=bind,source=pnpm-workspace.yaml,target=pnpm-workspace.yaml \
   SHARP_IGNORE_GLOBAL_LIBVIPS=true pnpm --filter @immich/sdk --filter immich-web --frozen-lockfile --force install && \
-  pnpm --filter @immich/sdk --filter immich-web build
-
-FROM builder AS plugins
-
-ARG TARGETPLATFORM
-
-COPY --from=ghcr.io/jdx/mise:2026.1.1@sha256:a55c391f7582f34c58bce1a85090cd526596402ba77fc32b06c49b8404ef9c14 /usr/local/bin/mise /usr/local/bin/mise
-
-WORKDIR /usr/src/app
-COPY ./plugins/mise.toml ./plugins/
-ENV MISE_TRUSTED_CONFIG_PATHS=/usr/src/app/plugins/mise.toml
-ENV MISE_DATA_DIR=/buildcache/mise
-RUN --mount=type=cache,id=mise-tools-${TARGETPLATFORM},target=/buildcache/mise \
-  mise install --cd plugins
-
-COPY ./plugins ./plugins/
-# Build plugins
-RUN --mount=type=cache,id=pnpm-plugins,target=/buildcache/pnpm-store \
-  --mount=type=bind,source=package.json,target=package.json \
-  --mount=type=bind,source=.pnpmfile.cjs,target=.pnpmfile.cjs \
-  --mount=type=bind,source=pnpm-lock.yaml,target=pnpm-lock.yaml \
-  --mount=type=bind,source=pnpm-workspace.yaml,target=pnpm-workspace.yaml \
-  --mount=type=cache,id=mise-tools-${TARGETPLATFORM},target=/buildcache/mise \
-  cd plugins && mise run build
+  NODE_OPTIONS=--max-old-space-size=4096 pnpm --filter @immich/sdk --filter immich-web build
 
 FROM ghcr.io/immich-app/base-server-prod:202603031112@sha256:bb8c8645ee61977140121e56ba09db7ae656a7506f9a6af1be8461b4d81fdf03
 
@@ -67,8 +44,6 @@ ENV NODE_ENV=production \
 
 COPY --from=server /output/server-pruned ./server
 COPY --from=web /usr/src/app/web/build /build/www
-COPY --from=plugins /usr/src/app/plugins/dist /build/corePlugin/dist
-COPY --from=plugins /usr/src/app/plugins/manifest.json /build/corePlugin/manifest.json
 COPY LICENSE /licenses/LICENSE.txt
 COPY LICENSE /LICENSE
 
