@@ -1,14 +1,12 @@
 <script lang="ts">
   import { afterNavigate, goto, invalidateAll } from '$app/navigation';
   import ActionMenuItem from '$lib/components/ActionMenuItem.svelte';
-  import UserPageLayout, { headerId } from '$lib/components/layouts/user-page-layout.svelte';
+  import emptyGeneralUrl from '$lib/assets/empty-general.svg';
+  import folderIconUrl from '$lib/assets/folder-icon.svg';
+  import UserPageLayout from '$lib/components/layouts/user-page-layout.svelte';
   import EmptyPlaceholder from '$lib/components/shared-components/empty-placeholder.svelte';
   import ButtonContextMenu from '$lib/components/shared-components/context-menu/button-context-menu.svelte';
   import GalleryViewer from '$lib/components/shared-components/gallery-viewer/gallery-viewer.svelte';
-  import Breadcrumbs from '$lib/components/shared-components/tree/breadcrumbs.svelte';
-  import TreeItemThumbnails from '$lib/components/shared-components/tree/tree-item-thumbnails.svelte';
-  import TreeItems from '$lib/components/shared-components/tree/tree-items.svelte';
-  import Sidebar from '$lib/components/sidebar/sidebar.svelte';
   import ArchiveAction from '$lib/components/timeline/actions/ArchiveAction.svelte';
   import ChangeDate from '$lib/components/timeline/actions/ChangeDateAction.svelte';
   import ChangeDescription from '$lib/components/timeline/actions/ChangeDescriptionAction.svelte';
@@ -19,19 +17,18 @@
   import FavoriteAction from '$lib/components/timeline/actions/FavoriteAction.svelte';
   import TagAction from '$lib/components/timeline/actions/TagAction.svelte';
   import AssetSelectControlBar from '$lib/components/timeline/AssetSelectControlBar.svelte';
-  import SkipLink from '$lib/elements/SkipLink.svelte';
   import type { Viewport } from '$lib/managers/timeline-manager/types';
   import { Route } from '$lib/route';
   import { getAssetBulkActions } from '$lib/services/asset.service';
   import { AssetInteraction } from '$lib/stores/asset-interaction.svelte';
-  import { foldersStore } from '$lib/stores/folders.svelte';
-  import { preferences, user } from '$lib/stores/user.store';
+  import { preferences } from '$lib/stores/user.store';
   import { cancelMultiselect } from '$lib/utils/asset-utils';
   import { toTimelineAsset } from '$lib/utils/timeline-util';
-  import { joinPaths } from '$lib/utils/tree-utils';
-  import { ActionButton, Button, CommandPaletteDefaultProvider, IconButton, Text } from '@immich/ui';
-  import { mdiDotsVertical, mdiFolder, mdiFolderHome, mdiFolderOutline, mdiSelectAll } from '@mdi/js';
+  import type { AssetResponseDto } from '@immich/sdk';
+  import { ActionButton, CommandPaletteDefaultProvider, IconButton } from '@immich/ui';
+  import { mdiDotsVertical, mdiSelectAll } from '@mdi/js';
   import { t } from 'svelte-i18n';
+  import { getFolderLabel, resolveBreadcrumbTrail, type FolderBreadcrumb } from './folder-content';
   import type { PageData } from './$types';
 
   interface Props {
@@ -42,97 +39,34 @@
 
   const viewport: Viewport = $state({ width: 0, height: 0 });
   const assetInteraction = new AssetInteraction();
+  let breadcrumbTrail = $state<FolderBreadcrumb[]>([]);
+  const isEmptyFolderView = $derived(data.folders.length === 0 && data.items.length === 0);
 
-  const handleNavigateToFolder = (folderName: string) => navigateToView(joinPaths(data.tree.path, folderName));
-  const isEmptyFolderView = $derived(data.tree.children.length === 0 && (!data.pathAssets || data.pathAssets.length === 0));
-
-  const getLinkForPath = (path: string) => Route.folders({ path });
-
-  afterNavigate(function clearAssetSelection() {
-    // Clear the asset selection when we navigate (like going to another folder)
+  afterNavigate(() => {
     cancelMultiselect(assetInteraction);
+    breadcrumbTrail = resolveBreadcrumbTrail(breadcrumbTrail, data.currentPath);
   });
 
-  function navigateToView(path: string) {
-    return goto(getLinkForPath(path), { keepFocus: true, noScroll: true });
+  function navigateToView(path?: string) {
+    return goto(Route.folders(path ? { path } : undefined), { keepFocus: true, noScroll: true });
   }
 
   async function triggerAssetUpdate() {
     cancelMultiselect(assetInteraction);
-    if (data.tree.path) {
-      await foldersStore.refreshAssetsByPath(data.tree.path);
-    }
     await invalidateAll();
   }
 
   function handleSelectAllAssets() {
-    if (!data.pathAssets) {
-      return;
-    }
-
-    assetInteraction.selectAssets(data.pathAssets.map((asset) => toTimelineAsset(asset)));
+    assetInteraction.selectAssets(data.items.map((asset: AssetResponseDto) => toTimelineAsset(asset)));
   }
 </script>
 
-<UserPageLayout title={data.meta.title}>
-  {#snippet sidebar()}
-    <Sidebar>
-      <SkipLink target={`#${headerId}`} text={$t('skip_to_folders')} breakpoint="md" />
-      <section>
-        <Text class="ps-4 mb-4" size="small">{$t('explorer')}</Text>
-        <div class="h-full">
-          <TreeItems
-            icons={{ default: mdiFolderOutline, active: mdiFolder }}
-            tree={foldersStore.folders!}
-            active={data.tree.path}
-            getLink={getLinkForPath}
-          />
-        </div>
-      </section>
-    </Sidebar>
-  {/snippet}
-
-  <Breadcrumbs node={data.tree} icon={mdiFolderHome} title={$t('folders')} getLink={getLinkForPath} />
-
-  <section class="mt-2 h-[calc(100%-(--spacing(25)))] overflow-auto immich-scrollbar">
-    {#if isEmptyFolderView}
-      <div class="flex min-h-full items-center justify-center py-8">
-        <div class="flex w-full max-w-3xl flex-col items-center gap-4">
-          <EmptyPlaceholder fullWidth text={$t('no_libraries_message')} />
-
-          {#if $user.isAdmin}
-            <div class="w-full rounded-3xl border border-[#D4D4D9] bg-[#F5F5F7] px-5 py-4 text-sm text-[#626266] dark:border-immich-dark-gray dark:bg-immich-dark-gray/40 dark:text-immich-dark-fg/80">
-              <p>{$t('admin.library_folder_description')}</p>
-              <div class="mt-3">
-                <Button size="small" color="secondary" variant="ghost" onclick={() => goto(Route.libraries())}>
-                  {$t('external_libraries')}
-                </Button>
-              </div>
-            </div>
-          {/if}
-        </div>
-      </div>
-    {:else}
-      <TreeItemThumbnails items={data.tree.children} icon={mdiFolder} onClick={handleNavigateToFolder} />
-
-      {#if data.pathAssets && data.pathAssets.length > 0}
-        <div bind:clientHeight={viewport.height} bind:clientWidth={viewport.width} class="mt-2">
-          <GalleryViewer
-            assets={data.pathAssets}
-            {assetInteraction}
-            {viewport}
-            showAssetName={true}
-            pageHeaderOffset={54}
-            onReload={triggerAssetUpdate}
-          />
-        </div>
-      {/if}
-    {/if}
-  </section>
-</UserPageLayout>
-
-{#if assetInteraction.selectionActive}
-  <div class="fixed top-0 start-0 w-full">
+<UserPageLayout
+  title={data.meta.title}
+  hideNavbar={assetInteraction.selectionActive}
+  showTopBar={assetInteraction.selectionActive}
+>
+  {#snippet topbar()}
     <AssetSelectControlBar
       assets={assetInteraction.selectedAssets}
       clearSelect={() => cancelMultiselect(assetInteraction)}
@@ -151,13 +85,11 @@
       <ActionButton action={Actions.AddToAlbum} />
       <FavoriteAction
         removeFavorite={assetInteraction.isAllFavorite}
-        onFavorite={function handleFavoriteUpdate(ids, isFavorite) {
-          if (data.pathAssets && data.pathAssets.length > 0) {
-            for (const id of ids) {
-              const asset = data.pathAssets.find((asset) => asset.id === id);
-              if (asset) {
-                asset.isFavorite = isFavorite;
-              }
+        onFavorite={(ids, isFavorite) => {
+          for (const id of ids) {
+            const asset = data.items.find((item: AssetResponseDto) => item.id === id);
+            if (asset) {
+              asset.isFavorite = isFavorite;
             }
           }
         }}
@@ -180,5 +112,77 @@
         <ActionMenuItem action={Actions.TranscodeVideoJob} />
       </ButtonContextMenu>
     </AssetSelectControlBar>
-  </div>
-{/if}
+  {/snippet}
+
+  <section class="flex h-full w-full flex-col overflow-auto immich-scrollbar">
+    <div class="flex flex-col gap-4">
+      <nav
+        aria-label={$t('folders')}
+        class="flex min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap text-sm text-slate-500 dark:text-slate-400"
+      >
+        <button type="button" class="truncate px-1 py-0.5 hover:text-slate-700 dark:hover:text-slate-200" onclick={() => navigateToView()}>
+          {$t('folders')}
+        </button>
+
+        {#each breadcrumbTrail as crumb, index (crumb.path)}
+          <span aria-hidden="true" class="shrink-0 px-1 text-slate-300 dark:text-slate-600">/</span>
+
+          {#if index === breadcrumbTrail.length - 1}
+            <span class="truncate px-1 py-0.5 font-medium text-slate-900 dark:text-slate-100">{crumb.label}</span>
+          {:else}
+            <button
+              type="button"
+              class="truncate px-1 py-0.5 hover:text-slate-700 dark:hover:text-slate-200"
+              onclick={() => navigateToView(crumb.path)}
+            >
+              {crumb.label}
+            </button>
+          {/if}
+        {/each}
+      </nav>
+
+      {#if data.folders.length > 0}
+        <div class="flex flex-wrap gap-4">
+          {#each data.folders as folder}
+            <button
+              type="button"
+              title={folder}
+              onclick={() => navigateToView(folder)}
+              class="flex h-[124px] w-[148px] shrink-0 flex-col items-center rounded-[8px] bg-[#F5F5F7] px-[12px] pb-[8px] pt-[16px] text-left transition-opacity hover:opacity-90 dark:bg-immich-dark-gray/40"
+            >
+              <div class="flex h-[64px] w-[64px] shrink-0 items-center justify-center">
+                <img src={folderIconUrl} alt="" class="h-[64px] w-[64px] shrink-0 object-contain" draggable="false" />
+              </div>
+              <span class="mt-auto h-[36px] w-[124px] overflow-hidden text-center text-[14px] leading-[18px] line-clamp-2 [word-break:break-all]">
+                {getFolderLabel(folder)}
+              </span>
+            </button>
+          {/each}
+        </div>
+      {/if}
+    </div>
+
+    {#if data.items.length > 0}
+      <div bind:clientHeight={viewport.height} bind:clientWidth={viewport.width} class="mt-4">
+        <GalleryViewer
+          assets={data.items}
+          {assetInteraction}
+          {viewport}
+          showAssetName={true}
+          pageHeaderOffset={54}
+          onReload={triggerAssetUpdate}
+        />
+      </div>
+    {/if}
+
+    {#if isEmptyFolderView}
+      <EmptyPlaceholder
+        fullWidth
+        src={emptyGeneralUrl}
+        imgWidth={200}
+        text={$t('empty_folder')}
+        class="mt-10 bg-transparent dark:bg-transparent"
+      />
+    {/if}
+  </section>
+</UserPageLayout>

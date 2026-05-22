@@ -45,7 +45,38 @@
   };
 </script>
 
-<UserPageLayout hideNavbar={assetInteraction.selectionActive} title={data.meta.title} scrollbar={false}>
+<UserPageLayout
+  hideNavbar={assetInteraction.selectionActive}
+  showTopBar={assetInteraction.selectionActive}
+  title={data.meta.title}
+  scrollbar={false}
+>
+  {#snippet topbar()}
+    <AssetSelectControlBar
+      assets={assetInteraction.selectedAssets}
+      clearSelect={() => assetInteraction.clearMultiselect()}
+    >
+      {@const Actions = getAssetBulkActions($t, assetInteraction.asControlContext())}
+      <CommandPaletteDefaultProvider name={$t('assets')} actions={Object.values(Actions)} />
+      <ArchiveAction
+        unarchive
+        onArchive={(ids, visibility) => timelineManager.update(ids, (asset) => (asset.visibility = visibility))}
+      />
+      <CreateSharedLink />
+      <SelectAllAssets {timelineManager} {assetInteraction} />
+      <ActionButton action={Actions.AddToAlbum} />
+      <FavoriteAction
+        removeFavorite={assetInteraction.isAllFavorite}
+        onFavorite={(ids, isFavorite) => timelineManager.update(ids, (asset) => (asset.isFavorite = isFavorite))}
+      />
+      <ButtonContextMenu icon={mdiDotsVertical} title={$t('menu')}>
+        <DownloadAction menuItem />
+        <SetVisibilityAction menuItem onVisibilitySet={handleSetVisibility} />
+        <DeleteAssets menuItem onAssetDelete={(assetIds) => timelineManager.removeAssets(assetIds)} />
+      </ButtonContextMenu>
+    </AssetSelectControlBar>
+  {/snippet}
+
   <Timeline
     enableRouting={true}
     bind:timelineManager
@@ -59,29 +90,3 @@
     {/snippet}
   </Timeline>
 </UserPageLayout>
-
-{#if assetInteraction.selectionActive}
-  <AssetSelectControlBar
-    assets={assetInteraction.selectedAssets}
-    clearSelect={() => assetInteraction.clearMultiselect()}
-  >
-    {@const Actions = getAssetBulkActions($t, assetInteraction.asControlContext())}
-    <CommandPaletteDefaultProvider name={$t('assets')} actions={Object.values(Actions)} />
-    <ArchiveAction
-      unarchive
-      onArchive={(ids, visibility) => timelineManager.update(ids, (asset) => (asset.visibility = visibility))}
-    />
-    <CreateSharedLink />
-    <SelectAllAssets {timelineManager} {assetInteraction} />
-    <ActionButton action={Actions.AddToAlbum} />
-    <FavoriteAction
-      removeFavorite={assetInteraction.isAllFavorite}
-      onFavorite={(ids, isFavorite) => timelineManager.update(ids, (asset) => (asset.isFavorite = isFavorite))}
-    />
-    <ButtonContextMenu icon={mdiDotsVertical} title={$t('menu')}>
-      <DownloadAction menuItem />
-      <SetVisibilityAction menuItem onVisibilitySet={handleSetVisibility} />
-      <DeleteAssets menuItem onAssetDelete={(assetIds) => timelineManager.removeAssets(assetIds)} />
-    </ButtonContextMenu>
-  </AssetSelectControlBar>
-{/if}

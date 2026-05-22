@@ -8,6 +8,8 @@ import { JOBS_LIBRARY_PAGINATION_SIZE } from 'src/constants';
 import { StorageCore } from 'src/cores/storage.core';
 import { OnEvent, OnJob } from 'src/decorators';
 import {
+  BrowseLibraryDirectoriesResponseDto,
+  BrowseLibraryQueryDto,
   CreateLibraryDto,
   LibraryResponseDto,
   LibraryStatsResponseDto,
@@ -74,6 +76,47 @@ export class LibraryService extends BaseService {
       this.watchLibraries = library.watch.enabled;
       await (this.watchLibraries ? this.watchAll() : this.unwatchAll());
     }
+  }
+
+  async browseDirectories({ path: directoryPath }: BrowseLibraryQueryDto): Promise<BrowseLibraryDirectoriesResponseDto> {
+    if (!directoryPath) {
+      return { directories: await this.getRootDirectories() };
+    }
+
+    const normalizedPath = path.normalize(directoryPath);
+    if (!isAbsolute(normalizedPath)) {
+      throw new BadRequestException('Path must be absolute');
+    }
+
+    const stats = await this.getReadableDirectoryStats(normalizedPath);
+    if (!stats.isDirectory()) {
+      throw new BadRequestException('Not a directory');
+    }
+
+    const entries = await this.storageRepository.readdir(normalizedPath);
+    const directories = (
+      await Promise.all(
+        entries.map(async (entry) => {
+          const entryPath = path.join(normalizedPath, entry);
+          try {
+            const entryStats = await this.getReadableDirectoryStats(entryPath);
+            return entryStats.isDirectory() ? { name: entry, path: entryPath } : null;
+          } catch {
+            return null;
+          }
+        }),
+      )
+    )
+      .filter((entry): entry is { name: string; path: string } => !!entry)
+      .sort((left, right) => left.name.localeCompare(right.name));
+
+    const root = parse(normalizedPath).root;
+
+    return {
+      currentPath: normalizedPath,
+      parentPath: normalizedPath === root ? undefined : path.dirname(normalizedPath),
+      directories,
+    };
   }
 
   private async watch(id: string): Promise<boolean> {
@@ -149,6 +192,37 @@ export class LibraryService extends BaseService {
     await ready$;
 
     return true;
+  }
+
+  private async getRootDirectories() {
+    if (process.platform !== 'win32') {
+      await this.getReadableDirectoryStats('/');
+      return [{ name: '/', path: '/' }];
+    }
+
+    const roots = await Promise.all(
+      Array.from({ length: 26 }, (_, index) => String.fromCharCode(65 + index)).map(async (letter) => {
+        const rootPath = `${letter}:\\`;
+        try {
+          const stats = await this.getReadableDirectoryStats(rootPath);
+          return stats.isDirectory() ? { name: rootPath, path: rootPath } : null;
+        } catch {
+          return null;
+        }
+      }),
+    );
+
+    return roots.filter((entry): entry is { name: string; path: string } => !!entry);
+  }
+
+  private async getReadableDirectoryStats(directoryPath: string) {
+    const stats = await this.storageRepository.stat(directoryPath);
+    const access = await this.storageRepository.checkFileExists(directoryPath, R_OK);
+    if (!access) {
+      throw new BadRequestException('Directory is not readable');
+    }
+
+    return stats;
   }
 
   async unwatch(id: string) {

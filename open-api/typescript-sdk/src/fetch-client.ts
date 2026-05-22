@@ -1362,6 +1362,30 @@ export type ValidateLibraryResponseDto = {
     /** Validation results for import paths */
     importPaths?: ValidateLibraryImportPathResponseDto[];
 };
+export type BrowseLibraryQueryDto = {
+    /** Absolute server directory path to browse */
+    path?: string;
+};
+export type BrowseLibraryDirectoryEntryDto = {
+    /** Directory name */
+    name: string;
+    /** Absolute server directory path */
+    path: string;
+};
+export type BrowseLibraryDirectoriesResponseDto = {
+    /** Current absolute server directory path */
+    currentPath?: string;
+    /** Parent absolute server directory path */
+    parentPath?: string;
+    /** Child directories */
+    directories: BrowseLibraryDirectoryEntryDto[];
+};
+export type ViewFolderContentResponseDto = {
+    /** Immediate child folder paths */
+    folders: string[];
+    /** Assets in the current folder */
+    items: AssetResponseDto[];
+};
 export type MapMarkerResponseDto = {
     /** City name */
     city: string | null;
@@ -4740,6 +4764,21 @@ export function scanLibrary({ id }: {
     }));
 }
 /**
+ * Browse server directories
+ */
+export function browseDirectories({ path }: {
+    path?: string;
+} = {}, opts?: Oazapfts.RequestOpts) {
+    return oazapfts.ok(oazapfts.fetchJson<{
+        status: 200;
+        data: BrowseLibraryDirectoriesResponseDto;
+    }>(`/libraries/browse/dirs${QS.query(QS.explode({
+        path
+    }))}`, {
+        ...opts
+    }));
+}
+/**
  * Retrieve library statistics
  */
 export function getLibraryStatistics({ id }: {
@@ -6776,6 +6815,23 @@ export function getUniqueOriginalPaths({ externalOnly }: {
         data: string[];
     }>(`/view/folder/unique-paths${QS.query(QS.explode({
         externalOnly
+    }))}`, {
+        ...opts
+    }));
+}
+/**
+ * Retrieve folder content
+ */
+export function getFolderContent({ externalOnly, path }: {
+    path?: string;
+    externalOnly?: boolean;
+} = {}, opts?: Oazapfts.RequestOpts) {
+    return oazapfts.ok(oazapfts.fetchJson<{
+        status: 200;
+        data: ViewFolderContentResponseDto;
+    }>(`/view/folder/content${QS.query(QS.explode({
+        externalOnly,
+        path
     }))}`, {
         ...opts
     }));

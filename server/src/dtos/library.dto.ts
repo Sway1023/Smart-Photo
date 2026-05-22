@@ -87,6 +87,33 @@ export class ValidateLibraryResponseDto {
   importPaths?: ValidateLibraryImportPathResponseDto[];
 }
 
+export class BrowseLibraryQueryDto {
+  @ApiPropertyOptional({ description: 'Absolute server directory path to browse' })
+  @Optional()
+  @IsString()
+  @IsNotEmpty()
+  path?: string;
+}
+
+export class BrowseLibraryDirectoryEntryDto {
+  @ApiProperty({ description: 'Directory name' })
+  name!: string;
+
+  @ApiProperty({ description: 'Absolute server directory path' })
+  path!: string;
+}
+
+export class BrowseLibraryDirectoriesResponseDto {
+  @ApiPropertyOptional({ description: 'Current absolute server directory path' })
+  currentPath?: string;
+
+  @ApiPropertyOptional({ description: 'Parent absolute server directory path' })
+  parentPath?: string;
+
+  @ApiProperty({ type: BrowseLibraryDirectoryEntryDto, isArray: true, description: 'Child directories' })
+  directories!: BrowseLibraryDirectoryEntryDto[];
+}
+
 export class ValidateLibraryImportPathResponseDto {
   @ApiProperty({ description: 'Import path' })
   importPath!: string;

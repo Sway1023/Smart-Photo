@@ -1,10 +1,7 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import ChangePinCodeSettings from '$lib/components/user-settings-page/PinCodeSettings.svelte';
-  import DownloadSettings from '$lib/components/user-settings-page/download-settings.svelte';
   import FeatureSettings from '$lib/components/user-settings-page/feature-settings.svelte';
-  import NotificationsSettings from '$lib/components/user-settings-page/notifications-settings.svelte';
-  import UserPurchaseSettings from '$lib/components/user-settings-page/user-purchase-settings.svelte';
   import UserUsageStatistic from '$lib/components/user-settings-page/user-usage-statistic.svelte';
   import { OpenQueryParam, QueryParameter } from '$lib/constants';
   import { featureFlagsManager } from '$lib/managers/feature-flags-manager.svelte';
@@ -14,15 +11,9 @@
   import {
     mdiAccountGroupOutline,
     mdiAccountOutline,
-    mdiApi,
-    mdiBellOutline,
     mdiCogOutline,
-    mdiDevices,
-    mdiDownload,
     mdiFeatureSearchOutline,
     mdiFormTextboxPassword,
-    mdiKeyOutline,
-    mdiLockSmart,
     mdiServerOutline,
     mdiTwoFactorAuthentication,
   } from '@mdi/js';
@@ -31,10 +22,8 @@
   import SettingAccordion from '../shared-components/settings/setting-accordion.svelte';
   import AppSettings from './app-settings.svelte';
   import ChangePasswordSettings from './change-password-settings.svelte';
-  import DeviceList from './device-list.svelte';
   import OAuthSettings from './oauth-settings.svelte';
   import PartnerSettings from './partner-settings.svelte';
-  import UserAPIKeyList from './user-api-key-list.svelte';
   import UserProfileSettings from './user-profile-settings.svelte';
 
   interface Props {
@@ -72,28 +61,6 @@
     <UserUsageStatistic />
   </SettingAccordion>
 
-  <SettingAccordion icon={mdiApi} key="api-keys" title={$t('api_keys')} subtitle={$t('manage_your_api_keys')}>
-    <UserAPIKeyList bind:keys />
-  </SettingAccordion>
-
-  <SettingAccordion
-    icon={mdiDevices}
-    key="authorized-devices"
-    title={$t('authorized_devices')}
-    subtitle={$t('manage_your_devices')}
-  >
-    <DeviceList bind:devices={sessions} />
-  </SettingAccordion>
-
-  <SettingAccordion
-    icon={mdiDownload}
-    key="download-settings"
-    title={$t('download_settings')}
-    subtitle={$t('download_settings_description')}
-  >
-    <DownloadSettings />
-  </SettingAccordion>
-
   <SettingAccordion
     icon={mdiFeatureSearchOutline}
     key="feature"
@@ -101,15 +68,6 @@
     subtitle={$t('features_setting_description')}
   >
     <FeatureSettings />
-  </SettingAccordion>
-
-  <SettingAccordion
-    icon={mdiBellOutline}
-    key={OpenQueryParam.NOTIFICATIONS}
-    title={$t('notifications')}
-    subtitle={$t('notifications_setting_description')}
-  >
-    <NotificationsSettings />
   </SettingAccordion>
 
   {#if featureFlagsManager.value.oauth}
@@ -140,25 +98,5 @@
     subtitle={$t('manage_sharing_with_partners')}
   >
     <PartnerSettings user={$user} />
-  </SettingAccordion>
-
-  <SettingAccordion
-    icon={mdiLockSmart}
-    key="user-pin-code-settings"
-    title={$t('user_pin_code_settings')}
-    subtitle={$t('user_pin_code_settings_description')}
-    autoScrollTo={true}
-  >
-    <ChangePinCodeSettings />
-  </SettingAccordion>
-
-  <SettingAccordion
-    icon={mdiKeyOutline}
-    key={OpenQueryParam.PURCHASE_SETTINGS}
-    title={$t('user_purchase_settings')}
-    subtitle={$t('user_purchase_settings_description')}
-    autoScrollTo={true}
-  >
-    <UserPurchaseSettings />
   </SettingAccordion>
 </SettingAccordionState>

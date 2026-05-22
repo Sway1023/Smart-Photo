@@ -1,5 +1,6 @@
 import { goto } from '$app/navigation';
 import { eventManager } from '$lib/managers/event-manager.svelte';
+import LibraryDirectoryPickerModal from '$lib/modals/LibraryDirectoryPickerModal.svelte';
 import LibraryExclusionPatternAddModal from '$lib/modals/LibraryExclusionPatternAddModal.svelte';
 import LibraryExclusionPatternEditModal from '$lib/modals/LibraryExclusionPatternEditModal.svelte';
 import LibraryFolderAddModal from '$lib/modals/LibraryFolderAddModal.svelte';
@@ -8,6 +9,7 @@ import { Route } from '$lib/route';
 import { handleError } from '$lib/utils/handle-error';
 import { getFormatter } from '$lib/utils/i18n';
 import {
+  browseDirectories,
   createLibrary,
   deleteLibrary,
   QueueCommand,
@@ -22,6 +24,13 @@ import {
 import { modalManager, toastManager, type ActionItem } from '@immich/ui';
 import { mdiInformationOutline, mdiPencilOutline, mdiPlusBoxOutline, mdiSync, mdiTrashCanOutline } from '@mdi/js';
 import type { MessageFormatter } from 'svelte-i18n';
+
+export const PRIMARY_EXTERNAL_LIBRARY_NAME = 'External Library';
+
+export type ManagedLibraryFolder = {
+  library: LibraryResponseDto;
+  path: string;
+};
 
 export const getLibrariesActions = ($t: MessageFormatter) => {
   const ScanAll: ActionItem = {
@@ -155,6 +164,10 @@ const handleScanLibrary = async (library: LibraryResponseDto) => {
   }
 };
 
+export const browseServerDirectories = (path?: string) => browseDirectories(path ? { path } : {});
+
+export const pickServerLibraryDirectory = () => modalManager.show(LibraryDirectoryPickerModal, {});
+
 export const handleCreateLibrary = async (dto: CreateLibraryDto) => {
   const $t = await getFormatter();
 
@@ -167,6 +180,26 @@ export const handleCreateLibrary = async (dto: CreateLibraryDto) => {
     handleError(error, $t('errors.unable_to_create_library'));
   }
 };
+
+export const getPrimaryLibrary = (libraries: LibraryResponseDto[]) =>
+  libraries.find((library) => library.name === PRIMARY_EXTERNAL_LIBRARY_NAME) ?? libraries[0];
+
+export const ensurePrimaryLibrary = async (libraries: LibraryResponseDto[], ownerId: string) => {
+  const existingLibrary = getPrimaryLibrary(libraries);
+  if (existingLibrary) {
+    return existingLibrary;
+  }
+
+  return await handleCreateLibrary({
+    ownerId,
+    name: PRIMARY_EXTERNAL_LIBRARY_NAME,
+    importPaths: [],
+    exclusionPatterns: [],
+  });
+};
+
+export const getManagedLibraryFolders = (libraries: LibraryResponseDto[]): ManagedLibraryFolder[] =>
+  libraries.flatMap((library) => library.importPaths.map((path) => ({ library, path }))).sort((left, right) => left.path.localeCompare(right.path));
 
 export const handleUpdateLibrary = async (library: LibraryResponseDto, dto: UpdateLibraryDto) => {
   const $t = await getFormatter();
@@ -226,6 +259,12 @@ export const handleAddLibraryFolder = async (library: LibraryResponseDto, folder
     });
     eventManager.emit('LibraryUpdate', updatedLibrary);
     toastManager.primary($t('admin.library_updated'));
+
+    try {
+      await scanLibrary({ id: library.id });
+    } catch (error) {
+      handleError(error, $t('errors.unable_to_scan_library'));
+    }
   } catch (error) {
     handleError(error, $t('errors.unable_to_update_library'));
     return false;
@@ -255,7 +294,7 @@ export const handleEditLibraryFolder = async (library: LibraryResponseDto, oldVa
   return true;
 };
 
-const handleDeleteLibraryFolder = async (library: LibraryResponseDto, folder: string) => {
+export const handleDeleteLibraryFolder = async (library: LibraryResponseDto, folder: string) => {
   const $t = await getFormatter();
 
   const confirmed = await modalManager.showDialog({
@@ -277,6 +316,19 @@ const handleDeleteLibraryFolder = async (library: LibraryResponseDto, folder: st
   } catch (error) {
     handleError(error, $t('errors.unable_to_update_library'));
   }
+};
+
+export const handleAddFolderToPrimaryLibrary = async (
+  libraries: LibraryResponseDto[],
+  ownerId: string,
+  folder: string,
+) => {
+  const library = await ensurePrimaryLibrary(libraries, ownerId);
+  if (!library) {
+    return false;
+  }
+
+  return handleAddLibraryFolder(library, folder);
 };
 
 export const handleAddLibraryExclusionPattern = async (library: LibraryResponseDto, exclusionPattern: string) => {

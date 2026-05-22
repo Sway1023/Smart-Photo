@@ -231,7 +231,7 @@
   ]}
 />
 
-<div class="relative z-auto w-full max-w-[720px]" use:focusOutside={{ onFocusOut }} tabindex="-1">
+<div class="relative z-20 w-full max-w-none" use:focusOutside={{ onFocusOut }} tabindex="-1">
   <form
     draggable="false"
     autocomplete="off"
@@ -311,7 +311,7 @@
 
           {#if showSearchTypeDropdown}
             <div
-              class="absolute right-0 top-full z-9999 mt-2 min-w-32 rounded-xl border border-[#D4D4D9] bg-white py-1 shadow-lg dark:border-gray-600 dark:bg-immich-dark-gray"
+              class="absolute right-0 top-full z-50 mt-2 min-w-32 rounded-xl border border-[#D4D4D9] bg-white py-1 shadow-lg dark:border-gray-600 dark:bg-immich-dark-gray"
             >
               {#each searchTypes as searchType (searchType.value)}
                 <button

@@ -46,10 +46,22 @@
 {#if featureFlagsManager.value.trash}
   <UserPageLayout
     hideNavbar={assetInteraction.selectionActive}
+    showTopBar={assetInteraction.selectionActive}
     actions={assetInteraction.selectionActive ? [] : [Empty, RestoreAll]}
     title={data.meta.title}
     scrollbar={false}
   >
+    {#snippet topbar()}
+      <AssetSelectControlBar
+        assets={assetInteraction.selectedAssets}
+        clearSelect={() => assetInteraction.clearMultiselect()}
+      >
+        <SelectAllAssets {timelineManager} {assetInteraction} />
+        <DeleteAssets force onAssetDelete={(assetIds) => timelineManager.removeAssets(assetIds)} />
+        <RestoreAssets onRestore={(assetIds) => timelineManager.removeAssets(assetIds)} />
+      </AssetSelectControlBar>
+    {/snippet}
+
     <Timeline enableRouting={true} bind:timelineManager {options} {assetInteraction} onEscape={handleEscape}>
       <p class="font-medium text-gray-500/60 dark:text-gray-300/60 p-4">
         {$t('trashed_items_will_be_permanently_deleted_after', {
@@ -61,15 +73,4 @@
       {/snippet}
     </Timeline>
   </UserPageLayout>
-{/if}
-
-{#if assetInteraction.selectionActive}
-  <AssetSelectControlBar
-    assets={assetInteraction.selectedAssets}
-    clearSelect={() => assetInteraction.clearMultiselect()}
-  >
-    <SelectAllAssets {timelineManager} {assetInteraction} />
-    <DeleteAssets force onAssetDelete={(assetIds) => timelineManager.removeAssets(assetIds)} />
-    <RestoreAssets onRestore={(assetIds) => timelineManager.removeAssets(assetIds)} />
-  </AssetSelectControlBar>
 {/if}

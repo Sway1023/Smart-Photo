@@ -5,6 +5,7 @@
   import OnEvents from '$lib/components/OnEvents.svelte';
   import ButtonContextMenu from '$lib/components/shared-components/context-menu/button-context-menu.svelte';
   import ControlAppBar from '$lib/components/shared-components/control-app-bar.svelte';
+  import UserPageLayout from '$lib/components/layouts/user-page-layout.svelte';
   import GalleryViewer from '$lib/components/shared-components/gallery-viewer/gallery-viewer.svelte';
   import SearchBar from '$lib/components/shared-components/search-bar/search-bar.svelte';
   import ArchiveAction from '$lib/components/timeline/actions/ArchiveAction.svelte';
@@ -211,10 +212,78 @@
 
 <OnEvents {onAlbumAddAssets} />
 
+<UserPageLayout hideNavbar showTopBar scrollbar={false}>
+  {#snippet topbar()}
+    {#if assetInteraction.selectionActive}
+      <AssetSelectControlBar
+        assets={assetInteraction.selectedAssets}
+        clearSelect={() => cancelMultiselect(assetInteraction)}
+      >
+        {@const Actions = getAssetBulkActions($t, assetInteraction.asControlContext())}
+        <CommandPaletteDefaultProvider name={$t('assets')} actions={Object.values(Actions)} />
+
+        <CreateSharedLink />
+        <IconButton
+          shape="round"
+          color="secondary"
+          variant="ghost"
+          aria-label={$t('select_all')}
+          icon={mdiSelectAll}
+          onclick={handleSelectAll}
+        />
+        <ActionButton action={Actions.AddToAlbum} />
+        {#if assetInteraction.isAllUserOwned}
+          <FavoriteAction
+            removeFavorite={assetInteraction.isAllFavorite}
+            onFavorite={(ids, isFavorite) => {
+              for (const id of ids) {
+                const asset = searchResultAssets.find((asset) => asset.id === id);
+                if (asset) {
+                  asset.isFavorite = isFavorite;
+                }
+              }
+            }}
+          />
+
+          <ButtonContextMenu icon={mdiDotsVertical} title={$t('menu')}>
+            <ActionMenuItem action={Actions.AddToAlbum} />
+            <DownloadAction menuItem />
+            <ChangeDate menuItem />
+            <ChangeDescription menuItem />
+            <ChangeLocation menuItem />
+            <ArchiveAction menuItem unarchive={assetInteraction.isAllArchived} />
+            <SetVisibilityAction menuItem onVisibilitySet={handleSetVisibility} />
+            {#if $preferences.tags.enabled}
+              <TagAction menuItem />
+            {/if}
+            <DeleteAssets menuItem {onAssetDelete} onUndoDelete={onSearchQueryUpdate} />
+            <hr />
+            <ActionMenuItem action={Actions.RegenerateThumbnailJob} />
+            <ActionMenuItem action={Actions.RefreshMetadataJob} />
+            <ActionMenuItem action={Actions.TranscodeVideoJob} />
+          </ButtonContextMenu>
+        {:else}
+          <DownloadAction />
+        {/if}
+      </AssetSelectControlBar>
+    {:else}
+      <ControlAppBar onClose={() => goto(previousRoute)} backIcon={mdiArrowLeft}>
+        <div class="absolute bg-light"></div>
+        <div class="w-full flex-1 ps-4">
+          <SearchBar
+            grayTheme={false}
+            value={terms?.originalFileName ?? terms?.description ?? ''}
+            searchQuery={terms}
+          />
+        </div>
+      </ControlAppBar>
+    {/if}
+  {/snippet}
+
 {#if terms}
   <section
     id="search-chips"
-    class="mt-24 text-center w-full flex gap-5 place-content-center place-items-center flex-wrap px-24"
+    class="mt-4 text-center w-full flex gap-5 place-content-center place-items-center flex-wrap px-24"
   >
     {#each getObjectKeys(terms) as searchKey (searchKey)}
       {@const value = terms[searchKey]}
@@ -281,75 +350,5 @@
       </div>
     {/if}
   </section>
-
-  <section>
-    {#if assetInteraction.selectionActive}
-      <div class="fixed top-0 start-0 w-full z-2">
-        <AssetSelectControlBar
-          assets={assetInteraction.selectedAssets}
-          clearSelect={() => cancelMultiselect(assetInteraction)}
-        >
-          {@const Actions = getAssetBulkActions($t, assetInteraction.asControlContext())}
-          <CommandPaletteDefaultProvider name={$t('assets')} actions={Object.values(Actions)} />
-
-          <CreateSharedLink />
-          <IconButton
-            shape="round"
-            color="secondary"
-            variant="ghost"
-            aria-label={$t('select_all')}
-            icon={mdiSelectAll}
-            onclick={handleSelectAll}
-          />
-          <ActionButton action={Actions.AddToAlbum} />
-          {#if assetInteraction.isAllUserOwned}
-            <FavoriteAction
-              removeFavorite={assetInteraction.isAllFavorite}
-              onFavorite={(ids, isFavorite) => {
-                for (const id of ids) {
-                  const asset = searchResultAssets.find((asset) => asset.id === id);
-                  if (asset) {
-                    asset.isFavorite = isFavorite;
-                  }
-                }
-              }}
-            />
-
-            <ButtonContextMenu icon={mdiDotsVertical} title={$t('menu')}>
-              <ActionMenuItem action={Actions.AddToAlbum} />
-              <DownloadAction menuItem />
-              <ChangeDate menuItem />
-              <ChangeDescription menuItem />
-              <ChangeLocation menuItem />
-              <ArchiveAction menuItem unarchive={assetInteraction.isAllArchived} />
-              <SetVisibilityAction menuItem onVisibilitySet={handleSetVisibility} />
-              {#if $preferences.tags.enabled}
-                <TagAction menuItem />
-              {/if}
-              <DeleteAssets menuItem {onAssetDelete} onUndoDelete={onSearchQueryUpdate} />
-              <hr />
-              <ActionMenuItem action={Actions.RegenerateThumbnailJob} />
-              <ActionMenuItem action={Actions.RefreshMetadataJob} />
-              <ActionMenuItem action={Actions.TranscodeVideoJob} />
-            </ButtonContextMenu>
-          {:else}
-            <DownloadAction />
-          {/if}
-        </AssetSelectControlBar>
-      </div>
-    {:else}
-      <div class="fixed top-0 start-0 w-full z-2">
-        <ControlAppBar onClose={() => goto(previousRoute)} backIcon={mdiArrowLeft}>
-          <div class="absolute bg-light"></div>
-          <div class="w-full flex-1 ps-4">
-            <SearchBar
-              grayTheme={false}
-              value={terms?.originalFileName ?? terms?.description ?? ''}
-              searchQuery={terms}
-            />
-          </div>
-        </ControlAppBar>
-      </div>
-    {/if}
-  </section>
 </section>
+</UserPageLayout>

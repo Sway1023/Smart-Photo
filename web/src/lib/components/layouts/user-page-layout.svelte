@@ -14,24 +14,28 @@
 
   interface Props {
     hideNavbar?: boolean;
+    showTopBar?: boolean;
     title?: string | undefined;
     description?: string | undefined;
     scrollbar?: boolean;
     use?: ActionArray;
     actions?: Array<HeaderButtonActionItem | MenuItemType>;
     sidebar?: Snippet;
+    topbar?: Snippet;
     buttons?: Snippet;
     children?: Snippet;
   }
 
   let {
     hideNavbar = false,
+    showTopBar = false,
     title = undefined,
     description = undefined,
     scrollbar = true,
     use = [],
     actions = [],
     sidebar,
+    topbar,
     buttons,
     children,
   }: Props = $props();
@@ -44,9 +48,11 @@
 
   let scrollbarClass = $derived(scrollbar ? 'immich-scrollbar' : 'scrollbar-hidden');
   const contentAreaClass = $derived(
-    hideNavbar
-      ? 'top-0 h-full'
-      : 'top-(--navbar-height) h-[calc(100%-var(--navbar-height))] max-md:top-(--navbar-height-md) max-md:h-[calc(100%-var(--navbar-height-md))]',
+    showTopBar
+      ? 'top-16 h-[calc(100%-4rem)]'
+      : hideNavbar
+        ? 'top-0 h-full'
+        : 'top-(--navbar-height) h-[calc(100%-var(--navbar-height))] max-md:top-(--navbar-height-md) max-md:h-[calc(100%-var(--navbar-height-md))]',
   );
 </script>
 
@@ -60,8 +66,16 @@
 
     <section class="relative min-w-0">
       {#if !hideNavbar}
-        <div class="absolute inset-x-0 top-0 z-30 overflow-hidden rounded-[20px] bg-[#F5F5F7] dark:bg-immich-dark-bg">
+        <div class="absolute inset-x-0 top-0 z-40 rounded-[20px] bg-[#F5F5F7] dark:bg-immich-dark-bg">
           <NavigationBar onUploadClick={() => openFileUploadDialog()} />
+        </div>
+      {/if}
+
+      {#if showTopBar}
+        <div class="absolute inset-x-0 top-0 z-30 flex h-16 w-full items-start bg-[#F5F5F7] dark:bg-immich-dark-bg">
+          <div class="flex w-full items-center">
+            {@render topbar?.()}
+          </div>
         </div>
       {/if}
 

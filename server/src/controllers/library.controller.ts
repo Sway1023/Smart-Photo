@@ -1,7 +1,9 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Endpoint, HistoryBuilder } from 'src/decorators';
 import {
+  BrowseLibraryDirectoriesResponseDto,
+  BrowseLibraryQueryDto,
   CreateLibraryDto,
   LibraryResponseDto,
   LibraryStatsResponseDto,
@@ -28,6 +30,17 @@ export class LibraryController {
   })
   getAllLibraries(): Promise<LibraryResponseDto[]> {
     return this.service.getAll();
+  }
+
+  @Get('browse/dirs')
+  @Authenticated({ permission: Permission.LibraryRead, admin: true })
+  @Endpoint({
+    summary: 'Browse server directories',
+    description: 'Retrieve readable server directories for selecting external library import paths.',
+    history: new HistoryBuilder().added('v1').beta('v1').stable('v2'),
+  })
+  browseDirectories(@Query() query: BrowseLibraryQueryDto): Promise<BrowseLibraryDirectoriesResponseDto> {
+    return this.service.browseDirectories(query);
   }
 
   @Post()

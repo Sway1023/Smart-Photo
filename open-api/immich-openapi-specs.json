@@ -5466,6 +5466,67 @@
         "x-immich-state": "Stable"
       }
     },
+    "/libraries/browse/dirs": {
+      "get": {
+        "description": "Retrieve readable server directories for selecting external library import paths.",
+        "operationId": "browseDirectories",
+        "parameters": [
+          {
+            "name": "path",
+            "required": false,
+            "in": "query",
+            "description": "Absolute server directory path to browse",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowseLibraryDirectoriesResponseDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          },
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Browse server directories",
+        "tags": [
+          "Libraries"
+        ],
+        "x-immich-admin-only": true,
+        "x-immich-history": [
+          {
+            "version": "v1",
+            "state": "Added"
+          },
+          {
+            "version": "v1",
+            "state": "Beta"
+          },
+          {
+            "version": "v2",
+            "state": "Stable"
+          }
+        ],
+        "x-immich-permission": "library.read",
+        "x-immich-state": "Stable"
+      }
+    },
     "/libraries/{id}": {
       "delete": {
         "description": "Delete an external library by its ID.",
@@ -13445,6 +13506,75 @@
         "x-immich-state": "Stable"
       }
     },
+    "/view/folder/content": {
+      "get": {
+        "description": "Retrieve immediate child folders and assets for a specific folder path.",
+        "operationId": "getFolderContent",
+        "parameters": [
+          {
+            "name": "externalOnly",
+            "required": false,
+            "in": "query",
+            "description": "Only include externally scanned library assets",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "path",
+            "required": false,
+            "in": "query",
+            "description": "Folder path to browse",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ViewFolderContentResponseDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          },
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Retrieve folder content",
+        "tags": [
+          "Views"
+        ],
+        "x-immich-history": [
+          {
+            "version": "v1",
+            "state": "Added"
+          },
+          {
+            "version": "v1",
+            "state": "Beta"
+          },
+          {
+            "version": "v2",
+            "state": "Stable"
+          }
+        ],
+        "x-immich-permission": "folder.read",
+        "x-immich-state": "Stable"
+      }
+    },
     "/view/folder/unique-paths": {
       "get": {
         "description": "Retrieve a list of unique folder paths from asset original paths.",
@@ -15408,6 +15538,46 @@
             "description": "Avatar color"
           }
         },
+        "type": "object"
+      },
+      "BrowseLibraryDirectoriesResponseDto": {
+        "properties": {
+          "currentPath": {
+            "description": "Current absolute server directory path",
+            "type": "string"
+          },
+          "directories": {
+            "description": "Child directories",
+            "items": {
+              "$ref": "#/components/schemas/BrowseLibraryDirectoryEntryDto"
+            },
+            "type": "array"
+          },
+          "parentPath": {
+            "description": "Parent absolute server directory path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "directories"
+        ],
+        "type": "object"
+      },
+      "BrowseLibraryDirectoryEntryDto": {
+        "properties": {
+          "name": {
+            "description": "Directory name",
+            "type": "string"
+          },
+          "path": {
+            "description": "Absolute server directory path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "path"
+        ],
         "type": "object"
       },
       "BulkIdErrorReason": {
@@ -23471,6 +23641,29 @@
           "webm"
         ],
         "type": "string"
+      },
+      "ViewFolderContentResponseDto": {
+        "properties": {
+          "folders": {
+            "description": "Immediate child folder paths",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "items": {
+            "description": "Assets in the current folder",
+            "items": {
+              "$ref": "#/components/schemas/AssetResponseDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "folders",
+          "items"
+        ],
+        "type": "object"
       }
     }
   }

@@ -3,7 +3,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { Endpoint, HistoryBuilder } from 'src/decorators';
 import { AssetResponseDto } from 'src/dtos/asset-response.dto';
 import { AuthDto } from 'src/dtos/auth.dto';
-import { ViewFolderQueryDto } from 'src/dtos/view.dto';
+import { ViewFolderContentResponseDto, ViewFolderQueryDto } from 'src/dtos/view.dto';
 import { ApiTag, Permission } from 'src/enum';
 import { Auth, Authenticated } from 'src/middleware/auth.guard';
 import { ViewService } from 'src/services/view.service';
@@ -33,5 +33,16 @@ export class ViewController {
   })
   getAssetsByOriginalPath(@Auth() auth: AuthDto, @Query() query: ViewFolderQueryDto): Promise<AssetResponseDto[]> {
     return this.service.getAssetsByOriginalPath(auth, query);
+  }
+
+  @Get('folder/content')
+  @Authenticated({ permission: Permission.FolderRead })
+  @Endpoint({
+    summary: 'Retrieve folder content',
+    description: 'Retrieve immediate child folders and assets for a specific folder path.',
+    history: new HistoryBuilder().added('v1').beta('v1').stable('v2'),
+  })
+  getFolderContent(@Auth() auth: AuthDto, @Query() query: ViewFolderQueryDto): Promise<ViewFolderContentResponseDto> {
+    return this.service.getFolderContent(auth, query);
   }
 }

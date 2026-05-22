@@ -38,6 +38,17 @@ export class LibraryRepository {
       .execute();
   }
 
+  @GenerateSql({ params: [DummyValue.UUID] })
+  getByOwnerId(ownerId: string, withDeleted = false) {
+    return this.db
+      .selectFrom('library')
+      .selectAll('library')
+      .where('library.ownerId', '=', ownerId)
+      .orderBy('createdAt', 'asc')
+      .$if(!withDeleted, (qb) => qb.where('library.deletedAt', 'is', null))
+      .execute();
+  }
+
   @GenerateSql()
   getAllDeleted() {
     return this.db
