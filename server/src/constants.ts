@@ -19,6 +19,9 @@ export const VECTOR_VERSION_RANGE = '>=0.5 <1';
 export const JOBS_ASSET_PAGINATION_SIZE = 1000;
 export const JOBS_LIBRARY_PAGINATION_SIZE = 10_000;
 
+/** Number of days to include in the recently-added timeline view. */
+export const RECENTLY_ADDED_DAYS = 7;
+
 export const EXTENSION_NAMES: Record<DatabaseExtension, string> = {
   cube: 'cube',
   earthdistance: 'earthdistance',

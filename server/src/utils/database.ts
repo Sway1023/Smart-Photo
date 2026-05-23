@@ -226,6 +226,14 @@ export function truncatedDate<O>() {
   return sql<O>`date_trunc(${sql.lit('MONTH')}, "localDateTime" AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'`;
 }
 
+export function truncatedDateCreatedAt<O>() {
+  return sql<O>`date_trunc(${sql.lit('MONTH')}, asset."createdAt" AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'`;
+}
+
+export function recentlyAddedCutoff(days: number) {
+  return sql<Date>`now() - ${sql.raw(`interval '${days} days'`)}`;
+}
+
 export function withTagId<O>(qb: SelectQueryBuilder<DB, 'asset', O>, tagId: string) {
   return qb.where((eb) =>
     eb.exists(

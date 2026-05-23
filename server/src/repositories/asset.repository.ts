@@ -14,6 +14,7 @@ import {
 import { jsonArrayFrom } from 'kysely/helpers/postgres';
 import { isEmpty, isUndefined, omitBy } from 'lodash';
 import { InjectKysely } from 'nestjs-kysely';
+import { RECENTLY_ADDED_DAYS } from 'src/constants';
 import { LockableProperty, Stack } from 'src/database';
 import { Chunked, ChunkedArray, DummyValue, GenerateSql } from 'src/decorators';
 import { AuthDto } from 'src/dtos/auth.dto';
@@ -29,7 +30,9 @@ import {
   asUuid,
   hasPeople,
   removeUndefinedKeys,
+  recentlyAddedCutoff,
   truncatedDate,
+  truncatedDateCreatedAt,
   unnest,
   withDefaultVisibility,
   withEdits,
@@ -71,6 +74,7 @@ interface LivePhotoSearchOptions {
 
 interface AssetBuilderOptions {
   isFavorite?: boolean;
+  isRecentlyAdded?: boolean;
   isTrashed?: boolean;
   isDuplicate?: boolean;
   albumId?: string;
@@ -775,7 +779,12 @@ export class AssetRepository {
       .with('asset', (qb) =>
         qb
           .selectFrom('asset')
-          .select(truncatedDate<Date>().as('timeBucket'))
+          .select(
+            options.isRecentlyAdded
+              ? truncatedDateCreatedAt<Date>().as('timeBucket')
+              : truncatedDate<Date>().as('timeBucket'),
+          )
+          .$if(!!options.isRecentlyAdded, (qb) => qb.where('asset.createdAt', '>=', recentlyAddedCutoff(RECENTLY_ADDED_DAYS)))
           .$if(!!options.isTrashed, (qb) => qb.where('asset.status', '!=', AssetStatus.Deleted))
           .where('asset.deletedAt', options.isTrashed ? 'is not' : 'is', null)
           .$if(!!options.bbox, (qb) => {
@@ -842,12 +851,16 @@ export class AssetRepository {
             sql`asset.type = 'IMAGE'`.as('isImage'),
             sql`asset."deletedAt" is not null`.as('isTrashed'),
             'asset.livePhotoVideoId',
-            sql`extract(epoch from (asset."localDateTime" AT TIME ZONE 'UTC' - asset."fileCreatedAt" at time zone 'UTC'))::real / 3600`.as(
-              'localOffsetHours',
-            ),
+            options.isRecentlyAdded
+              ? sql`0`.as('localOffsetHours')
+              : sql`extract(epoch from (asset."localDateTime" AT TIME ZONE 'UTC' - asset."fileCreatedAt" at time zone 'UTC'))::real / 3600`.as(
+                  'localOffsetHours',
+                ),
             'asset.ownerId',
             'asset.status',
-            sql`asset."fileCreatedAt" at time zone 'utc'`.as('fileCreatedAt'),
+            options.isRecentlyAdded
+              ? sql`asset."createdAt" at time zone 'utc'`.as('fileCreatedAt')
+              : sql`asset."fileCreatedAt" at time zone 'utc'`.as('fileCreatedAt'),
             eb.fn('encode', ['asset.thumbhash', sql.lit('base64')]).as('thumbhash'),
             'asset_exif.city',
             'asset_exif.country',
@@ -866,6 +879,7 @@ export class AssetRepository {
           ])
           .$if(!!options.withCoordinates, (qb) => qb.select(['asset_exif.latitude', 'asset_exif.longitude']))
           .where('asset.deletedAt', options.isTrashed ? 'is not' : 'is', null)
+          .$if(!!options.isRecentlyAdded, (qb) => qb.where('asset.createdAt', '>=', recentlyAddedCutoff(RECENTLY_ADDED_DAYS)))
           .$if(options.visibility == undefined, withDefaultVisibility)
           .$if(!!options.visibility, (qb) => qb.where('asset.visibility', '=', options.visibility!))
           .$if(!!options.bbox, (qb) => {
@@ -880,7 +894,10 @@ export class AssetRepository {
 
             return withBoundingBox(withBoundingCircle, bbox);
           })
-          .where(truncatedDate(), '=', timeBucket.replace(/^[+-]/, ''))
+          .$if(!!options.isRecentlyAdded, (qb) =>
+            qb.where(truncatedDateCreatedAt(), '=', timeBucket.replace(/^[+-]/, '')),
+          )
+          .$if(!options.isRecentlyAdded, (qb) => qb.where(truncatedDate(), '=', timeBucket.replace(/^[+-]/, '')))
           .$if(!!options.albumId, (qb) =>
             qb.where((eb) =>
               eb.exists(
@@ -927,8 +944,10 @@ export class AssetRepository {
           .$if(!!options.isTrashed, (qb) => qb.where('asset.status', '!=', AssetStatus.Deleted))
           .$if(!!options.tagId, (qb) => withTagId(qb, options.tagId!))
           .$call((qb) => applyCategoryFilter(qb, options.categoryType))
-          .orderBy(sql`(asset."localDateTime" AT TIME ZONE 'UTC')::date`, order)
-          .orderBy('asset.fileCreatedAt', order),
+          .$if(!!options.isRecentlyAdded, (qb) => qb.orderBy('asset.createdAt', order))
+          .$if(!options.isRecentlyAdded, (qb) =>
+            qb.orderBy(sql`(asset."localDateTime" AT TIME ZONE 'UTC')::date`, order).orderBy('asset.fileCreatedAt', order),
+          )
       )
       .with('agg', (qb) =>
         qb

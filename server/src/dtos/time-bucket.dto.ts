@@ -40,6 +40,12 @@ export class TimeBucketDto {
 
   @ValidateBoolean({
     optional: true,
+    description: 'Filter to assets uploaded within the recently-added window (uses asset.createdAt)',
+  })
+  isRecentlyAdded?: boolean;
+
+  @ValidateBoolean({
+    optional: true,
     description: 'Include stacked assets in the response. When true, only primary assets from stacks are returned.',
   })
   withStacked?: boolean;

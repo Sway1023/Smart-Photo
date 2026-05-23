@@ -52,6 +52,17 @@ describe(TimelineService.name, () => {
         categoryType: CategoryType.Video,
       });
     });
+
+    it('should pass isRecentlyAdded to repository', async () => {
+      mocks.asset.getTimeBuckets.mockResolvedValue([{ timeBucket: 'bucket', count: 1 }]);
+
+      await sut.getTimeBuckets(authStub.admin, { isRecentlyAdded: true });
+
+      expect(mocks.asset.getTimeBuckets).toHaveBeenCalledWith({
+        userIds: [authStub.admin.user.id],
+        isRecentlyAdded: true,
+      });
+    });
   });
 
   describe('getTimeBucket', () => {

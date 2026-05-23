@@ -31,7 +31,7 @@
   let { data }: Props = $props();
 
   let timelineManager = $state<TimelineManager>() as TimelineManager;
-  const options = $derived({ categoryType: data.categoryType, withStacked: true });
+  const options = { isRecentlyAdded: true, withStacked: true };
 
   const assetInteraction = new AssetInteraction();
 
@@ -61,13 +61,13 @@
     >
       {@const Actions = getAssetBulkActions($t, assetInteraction.asControlContext())}
       <CommandPaletteDefaultProvider name={$t('assets')} actions={Object.values(Actions)} />
+      <CreateSharedLink />
+      <SelectAllAssets {timelineManager} {assetInteraction} />
+      <ActionButton action={Actions.AddToAlbum} />
       <FavoriteAction
         removeFavorite={assetInteraction.isAllFavorite}
         onFavorite={(ids, isFavorite) => timelineManager.update(ids, (asset) => (asset.isFavorite = isFavorite))}
       />
-      <CreateSharedLink />
-      <SelectAllAssets {timelineManager} {assetInteraction} />
-      <ActionButton action={Actions.AddToAlbum} />
       <ButtonContextMenu icon={mdiDotsVertical} title={$t('menu')}>
         <DownloadAction menuItem />
         <ChangeDate menuItem />
@@ -100,7 +100,7 @@
     onEscape={handleEscape}
   >
     {#snippet empty()}
-      <EmptyPlaceholder text={$t('no_assets_message')} class="mt-10 mx-auto" />
+      <EmptyPlaceholder text={$t('no_results_description')} class="mt-10 mx-auto" />
     {/snippet}
   </Timeline>
 </UserPageLayout>

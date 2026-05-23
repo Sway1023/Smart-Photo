@@ -13,6 +13,7 @@
     mdiArchiveArrowDown,
     mdiArchiveArrowDownOutline,
     mdiChevronDoubleLeft,
+    mdiClockOutline,
     mdiFolderOutline,
     mdiHeart,
     mdiHeartOutline,
@@ -26,8 +27,6 @@
     mdiMap,
     mdiMapOutline,
     mdiTagMultipleOutline,
-    mdiToolbox,
-    mdiToolboxOutline,
     mdiTrashCan,
     mdiTrashCanOutline,
     mdiViewGrid,
@@ -53,7 +52,7 @@
     isSidebarCollapsed.update((collapsed) => !collapsed);
   };
 
-  const mainItems = $derived.by(() => {
+  const topItems = $derived.by(() => {
     const items: SidebarItem[] = [
       {
         key: 'photos',
@@ -65,6 +64,48 @@
       },
     ];
 
+    if ($preferences.folders.enabled && $preferences.folders.sidebarWeb) {
+      items.push({
+        key: 'folders',
+        title: $t('folders'),
+        href: Route.folders(),
+        icon: mdiFolderOutline,
+        active: isActive(Route.folders()),
+      });
+    }
+
+    items.push(
+      {
+        key: 'recently-added',
+        title: $t('recently_added'),
+        href: Route.recentlyAdded(),
+        icon: mdiClockOutline,
+        active: isActive(Route.recentlyAdded()),
+      },
+      {
+        key: 'favorites',
+        title: $t('favorites'),
+        href: Route.favorites(),
+        icon: mdiHeartOutline,
+        activeIcon: mdiHeart,
+        active: isActive(Route.favorites()),
+      },
+    );
+
+    return items;
+  });
+
+  const libraryItems = $derived.by(() => {
+    const items: SidebarItem[] = [];
+
+    items.push({
+      key: 'albums',
+      title: $t('albums'),
+      href: Route.albums(),
+      icon: mdiImageAlbum,
+      active: isActive(Route.albums()),
+    });
+
     if (featureFlagsManager.value.map) {
       items.push({
         key: 'map',
@@ -75,47 +116,6 @@
         active: isActive(Route.map()),
       });
     }
-
-    if ($preferences.sharedLinks.enabled && $preferences.sharedLinks.sidebarWeb) {
-      items.push({
-        key: 'shared-links',
-        title: $t('shared_links'),
-        href: Route.sharedLinks(),
-        icon: mdiLink,
-        active: isActive(Route.sharedLinks()),
-      });
-    }
-
-    items.push({
-      key: 'sharing',
-      title: $t('sharing'),
-      href: Route.sharing(),
-      icon: mdiAccountMultipleOutline,
-      activeIcon: mdiAccountMultiple,
-      active: isActive(Route.sharing()),
-    });
-
-    return items;
-  });
-
-  const libraryItems = $derived.by(() => {
-    const items: SidebarItem[] = [
-      {
-        key: 'favorites',
-        title: $t('favorites'),
-        href: Route.favorites(),
-        icon: mdiHeartOutline,
-        activeIcon: mdiHeart,
-        active: isActive(Route.favorites()),
-      },
-      {
-        key: 'albums',
-        title: $t('albums'),
-        href: Route.albums(),
-        icon: mdiImageAlbum,
-        active: isActive(Route.albums()),
-      },
-    ];
 
     items.push({
       key: 'categories',
@@ -136,34 +136,33 @@
       });
     }
 
-    if ($preferences.folders.enabled && $preferences.folders.sidebarWeb) {
+    items.push({
+      key: 'sharing',
+      title: $t('sharing'),
+      href: Route.sharing(),
+      icon: mdiAccountMultipleOutline,
+      activeIcon: mdiAccountMultiple,
+      active: isActive(Route.sharing()),
+    });
+
+    if ($preferences.sharedLinks.enabled && $preferences.sharedLinks.sidebarWeb) {
       items.push({
-        key: 'folders',
-        title: $t('folders'),
-        href: Route.folders(),
-        icon: mdiFolderOutline,
-        active: isActive(Route.folders()),
+        key: 'shared-links',
+        title: $t('shared_links'),
+        href: Route.sharedLinks(),
+        icon: mdiLink,
+        active: isActive(Route.sharedLinks()),
       });
     }
 
-    items.push(
-      {
-        key: 'utilities',
-        title: $t('utilities'),
-        href: Route.utilities(),
-        icon: mdiToolboxOutline,
-        activeIcon: mdiToolbox,
-        active: isActive(Route.utilities()),
-      },
-      {
-        key: 'archive',
-        title: $t('archive'),
-        href: Route.archive(),
-        icon: mdiArchiveArrowDownOutline,
-        activeIcon: mdiArchiveArrowDown,
-        active: isActive(Route.archive()),
-      },
-    );
+    items.push({
+      key: 'archive',
+      title: $t('archive'),
+      href: Route.archive(),
+      icon: mdiArchiveArrowDownOutline,
+      activeIcon: mdiArchiveArrowDown,
+      active: isActive(Route.archive()),
+    });
 
     if (featureFlagsManager.value.trash) {
       items.push({
@@ -216,7 +215,7 @@
 <Sidebar ariaLabel={$t('primary')} collapsible collapsed={$isSidebarCollapsed}>
   <div class="flex min-h-full flex-col gap-2 rounded-[20px] bg-[#ECECF1] p-3 dark:bg-immich-dark-gray/40">
     <div class="flex flex-col gap-1">
-      {#each mainItems as item (item.key)}
+      {#each topItems as item (item.key)}
         {@render itemRow(item)}
       {/each}
     </div>

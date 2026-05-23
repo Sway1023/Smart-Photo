@@ -16,7 +16,8 @@ export class TrashRepository {
     const { numUpdatedRows } = await this.db
       .updateTable('asset')
       .where('ownerId', '=', userId)
-      .where('status', '=', AssetStatus.Trashed)
+      .where('deletedAt', 'is not', null)
+      .where('status', '!=', AssetStatus.Deleted)
       .set({ status: AssetStatus.Active, deletedAt: null })
       .executeTakeFirst();
 
@@ -28,7 +29,8 @@ export class TrashRepository {
     const { numUpdatedRows } = await this.db
       .updateTable('asset')
       .where('ownerId', '=', userId)
-      .where('status', '=', AssetStatus.Trashed)
+      .where('deletedAt', 'is not', null)
+      .where('status', '!=', AssetStatus.Deleted)
       .set({ status: AssetStatus.Deleted })
       .executeTakeFirst();
 
@@ -43,8 +45,9 @@ export class TrashRepository {
 
     const { numUpdatedRows } = await this.db
       .updateTable('asset')
-      .where('status', '=', AssetStatus.Trashed)
       .where('id', 'in', ids)
+      .where('deletedAt', 'is not', null)
+      .where('status', '!=', AssetStatus.Deleted)
       .set({ status: AssetStatus.Active, deletedAt: null })
       .executeTakeFirst();
 

@@ -199,9 +199,10 @@ export class SearchRepository {
   })
   async searchMetadata(pagination: SearchPaginationOptions, options: AssetSearchOptions) {
     const orderDirection = (options.orderDirection?.toLowerCase() || 'desc') as OrderByDirection;
+    const orderColumn = options.createdAfter || options.createdBefore ? 'asset.createdAt' : 'asset.fileCreatedAt';
     const items = await searchAssetBuilder(this.db, options)
       .selectAll('asset')
-      .orderBy('asset.fileCreatedAt', orderDirection)
+      .orderBy(orderColumn, orderDirection)
       .limit(pagination.size + 1)
       .offset((pagination.page - 1) * pagination.size)
       .execute();

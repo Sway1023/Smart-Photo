@@ -12145,6 +12145,15 @@
             }
           },
           {
+            "name": "isRecentlyAdded",
+            "required": false,
+            "in": "query",
+            "description": "Filter to assets uploaded within the recently-added window (uses asset.createdAt)",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
             "name": "isTrashed",
             "required": false,
             "in": "query",
@@ -12335,6 +12344,15 @@
             "required": false,
             "in": "query",
             "description": "Filter by favorite status (true for favorites only, false for non-favorites only)",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "isRecentlyAdded",
+            "required": false,
+            "in": "query",
+            "description": "Filter to assets uploaded within the recently-added window (uses asset.createdAt)",
             "schema": {
               "type": "boolean"
             }

@@ -89,6 +89,43 @@ describe(SearchService.name, () => {
     });
   });
 
+  describe('searchMetadata with createdAfter', () => {
+    it('should filter and order by asset createdAt when createdAfter is set', async () => {
+      const { sut, ctx } = setup();
+      const { user } = await ctx.newUser();
+      const now = new Date();
+      const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+      const fourDaysAgo = new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000);
+      const tenDaysAgo = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000);
+
+      const { asset: newerUpload } = await ctx.newAsset({
+        ownerId: user.id,
+        createdAt: twoDaysAgo,
+        fileCreatedAt: tenDaysAgo,
+        localDateTime: tenDaysAgo,
+      });
+      const { asset: olderUpload } = await ctx.newAsset({
+        ownerId: user.id,
+        createdAt: fourDaysAgo,
+        fileCreatedAt: twoDaysAgo,
+        localDateTime: twoDaysAgo,
+      });
+      await ctx.newAsset({
+        ownerId: user.id,
+        createdAt: tenDaysAgo,
+        fileCreatedAt: twoDaysAgo,
+        localDateTime: twoDaysAgo,
+      });
+
+      const auth = factory.auth({ user: { id: user.id } });
+      const createdAfter = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+      const response = await sut.searchMetadata(auth, { createdAfter });
+
+      expect(response.assets.items.map((asset) => asset.id)).toEqual([newerUpload.id, olderUpload.id]);
+    });
+  });
+
   describe('withStacked option', () => {
     it('should exclude stacked assets when withStacked is false', async () => {
       const { sut, ctx } = setup();

@@ -225,11 +225,37 @@ export const getProfileImageUrl = (user: UserResponseDto) =>
 export const getPeopleThumbnailUrl = (person: PersonResponseDto, updatedAt?: string) =>
   createUrl(getPeopleThumbnailPath(person.id), { updatedAt: updatedAt ?? person.updatedAt });
 
+const copyWithExecCommand = (text: string): boolean => {
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.left = '-9999px';
+  document.body.append(textarea);
+  textarea.select();
+  textarea.setSelectionRange(0, text.length);
+  const success = document.execCommand('copy');
+  textarea.remove();
+  return success;
+};
+
 export const copyToClipboard = async (secret: string) => {
   const $t = get(t);
 
   try {
-    await navigator.clipboard.writeText(secret);
+    if (globalThis.isSecureContext && navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(secret);
+      toastManager.info($t('copied_to_clipboard'));
+      return;
+    }
+  } catch {
+    // fall through to execCommand
+  }
+
+  try {
+    if (!copyWithExecCommand(secret)) {
+      throw new Error('clipboard unavailable');
+    }
     toastManager.info($t('copied_to_clipboard'));
   } catch (error) {
     handleError(error, $t('errors.unable_to_copy_to_clipboard'));
