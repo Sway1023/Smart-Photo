@@ -16,7 +16,6 @@
   import DeleteAssets from '$lib/components/timeline/actions/DeleteAssetsAction.svelte';
   import DownloadAction from '$lib/components/timeline/actions/DownloadAction.svelte';
   import FavoriteAction from '$lib/components/timeline/actions/FavoriteAction.svelte';
-  import SetVisibilityAction from '$lib/components/timeline/actions/SetVisibilityAction.svelte';
   import TagAction from '$lib/components/timeline/actions/TagAction.svelte';
   import AssetSelectControlBar from '$lib/components/timeline/AssetSelectControlBar.svelte';
   import { QueryParameter } from '$lib/constants';
@@ -101,11 +100,6 @@
   const onAssetDelete = (assetIds: string[]) => {
     const assetIdSet = new Set(assetIds);
     searchResultAssets = searchResultAssets.filter((asset: AssetResponseDto) => !assetIdSet.has(asset.id));
-  };
-
-  const handleSetVisibility = (assetIds: string[]) => {
-    assetInteraction.clearMultiselect();
-    onAssetDelete(assetIds);
   };
 
   const handleSelectAll = () => {
@@ -252,7 +246,6 @@
             <ChangeDescription menuItem />
             <ChangeLocation menuItem />
             <ArchiveAction menuItem unarchive={assetInteraction.isAllArchived} />
-            <SetVisibilityAction menuItem onVisibilitySet={handleSetVisibility} />
             {#if $preferences.tags.enabled}
               <TagAction menuItem />
             {/if}
