@@ -38,7 +38,7 @@
     </div>
   </AppShellSidebar>
 
-  <BreadcrumbActionPage {breadcrumbs} {actions}>
+  <BreadcrumbActionPage {breadcrumbs} {actions} backHref={Route.photos()}>
     {@render children?.()}
   </BreadcrumbActionPage>
 </AppShell>

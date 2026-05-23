@@ -30,8 +30,8 @@
   import { preferences, user } from '$lib/stores/user.store';
   import { joinPaths, TreeNode } from '$lib/utils/tree-utils';
   import { getAllTags, type TagResponseDto } from '@immich/sdk';
-  import { ActionButton, CommandPaletteDefaultProvider, Text } from '@immich/ui';
-  import { mdiDotsVertical, mdiTag, mdiTagMultiple } from '@mdi/js';
+  import { ActionButton, CommandPaletteDefaultProvider, IconButton, Text } from '@immich/ui';
+  import { mdiArrowLeft, mdiDotsVertical, mdiTag, mdiTagMultiple } from '@mdi/js';
   import { t } from 'svelte-i18n';
   import type { PageData } from './$types';
 
@@ -133,7 +133,17 @@
     </Sidebar>
   {/snippet}
 
-  <Breadcrumbs node={tag} icon={mdiTagMultiple} title={$t('tags')} {getLink} />
+  <div class="flex items-center gap-1">
+    <IconButton
+      shape="round"
+      color="secondary"
+      variant="ghost"
+      icon={mdiArrowLeft}
+      aria-label={$t('go_back')}
+      onclick={() => goto(Route.photos())}
+    />
+    <Breadcrumbs node={tag} icon={mdiTagMultiple} title={$t('tags')} {getLink} />
+  </div>
 
   <section class="mt-2 h-[calc(100%-(--spacing(20)))] overflow-auto immich-scrollbar">
     {#if tag.hasAssets}

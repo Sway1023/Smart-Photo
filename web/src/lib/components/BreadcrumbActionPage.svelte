@@ -6,22 +6,24 @@
     Container,
     ContextMenuButton,
     HStack,
+    IconButton,
     MenuItemType,
     Scrollable,
     isMenuItemType,
     type BreadcrumbItem,
   } from '@immich/ui';
-  import { mdiSlashForward } from '@mdi/js';
+  import { mdiArrowLeft, mdiSlashForward } from '@mdi/js';
   import type { Snippet } from 'svelte';
   import { t } from 'svelte-i18n';
 
   type Props = {
     breadcrumbs?: BreadcrumbItem[];
+    backHref?: string;
     actions?: Array<HeaderButtonActionItem | MenuItemType>;
     children?: Snippet;
   };
 
-  let { breadcrumbs = [], actions = [], children }: Props = $props();
+  let { breadcrumbs = [], backHref, actions = [], children }: Props = $props();
 
   const enabledActions = $derived(
     actions
@@ -32,7 +34,19 @@
 
 <div class="h-full flex flex-col">
   <div class="flex h-16 w-full justify-between items-center border-b py-2 px-4 md:px-2">
-    <Breadcrumbs items={breadcrumbs} separator={mdiSlashForward} />
+    <div class="flex min-w-0 items-center gap-1">
+      {#if backHref}
+        <IconButton
+          shape="round"
+          color="secondary"
+          variant="ghost"
+          icon={mdiArrowLeft}
+          aria-label={$t('go_back')}
+          href={backHref}
+        />
+      {/if}
+      <Breadcrumbs items={breadcrumbs} separator={mdiSlashForward} />
+    </div>
 
     {#if enabledActions.length > 0}
       <div class="hidden md:block">
