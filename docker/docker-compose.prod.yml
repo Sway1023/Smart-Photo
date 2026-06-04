@@ -21,9 +21,12 @@ services:
       dockerfile: server/Dockerfile
     volumes:
       - ${UPLOAD_LOCATION}/photos:/data
+      - ${EXTERNAL_LIBRARY_LOCATION:-./import}:/external
       - /etc/localtime:/etc/localtime:ro
     env_file:
       - .env
+    environment:
+      IMMICH_EXTERNAL_LIBRARY_ROOT: /external
     ports:
       - 2283:2283
     depends_on:

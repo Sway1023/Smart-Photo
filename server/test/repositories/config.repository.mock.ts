@@ -82,6 +82,7 @@ const envData: EnvData = {
 
   storage: {
     ignoreMountCheckErrors: false,
+    externalLibraryRoot: '/external',
   },
 
   telemetry: {

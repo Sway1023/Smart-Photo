@@ -71,12 +71,13 @@ services:
     restart: unless-stopped
     volumes:
       - ${UPLOAD_LOCATION}/photos:/data
-      - ./import:/import
+      - ${EXTERNAL_LIBRARY_LOCATION:-./import}:/external
       - /etc/localtime:/etc/localtime:ro
       - pnpm_store_server:/buildcache/pnpm-store
     env_file:
       - .env
     environment:
+      IMMICH_EXTERNAL_LIBRARY_ROOT: /external
       IMMICH_HOST: 0.0.0.0
       IMMICH_REPOSITORY: immich-app/immich
       IMMICH_REPOSITORY_URL: https://github.com/immich-app/immich
