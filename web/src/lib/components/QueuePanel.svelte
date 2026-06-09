@@ -1,7 +1,6 @@
 <script lang="ts">
   import QueueCard from '$lib/components/QueueCard.svelte';
   import QueueStorageMigrationDescription from '$lib/components/QueueStorageMigrationDescription.svelte';
-  import { featureFlagsManager } from '$lib/managers/feature-flags-manager.svelte';
   import { queueManager } from '$lib/managers/queue-manager.svelte';
   import { asQueueItem } from '$lib/services/queue.service';
   import { handleError } from '$lib/utils/handle-error';
@@ -12,7 +11,7 @@
     type QueueResponseDto,
     runQueueCommandLegacy,
   } from '@immich/sdk';
-  import { modalManager, toastManager } from '@immich/ui';
+  import { toastManager } from '@immich/ui';
   import type { Component } from 'svelte';
   import { t } from 'svelte-i18n';
 
@@ -21,7 +20,6 @@
   };
 
   let { queues }: Props = $props();
-  const featureFlags = featureFlagsManager.value;
 
   type QueueDetails = {
     description?: Component;
@@ -47,33 +45,6 @@
     [QueueName.Sidecar]: {
       allText: $t('sync'),
       missingText: $t('discover'),
-      disabled: !featureFlags.sidecar,
-    },
-    [QueueName.SmartSearch]: {
-      allText: $t('all'),
-      missingText: $t('missing'),
-      disabled: !featureFlags.smartSearch,
-    },
-    [QueueName.DuplicateDetection]: {
-      allText: $t('all'),
-      missingText: $t('missing'),
-      disabled: !featureFlags.duplicateDetection,
-    },
-    [QueueName.FaceDetection]: {
-      allText: $t('reset'),
-      refreshText: $t('refresh'),
-      missingText: $t('missing'),
-      disabled: !featureFlags.facialRecognition,
-    },
-    [QueueName.FacialRecognition]: {
-      allText: $t('reset'),
-      missingText: $t('missing'),
-      disabled: !featureFlags.facialRecognition,
-    },
-    [QueueName.Ocr]: {
-      allText: $t('all'),
-      missingText: $t('missing'),
-      disabled: !featureFlags.ocr,
     },
     [QueueName.VideoConversion]: {
       allText: $t('all'),
@@ -92,19 +63,6 @@
 
   const handleCommand = async (name: QueueName, dto: QueueCommandDto) => {
     const item = asQueueItem($t, { name });
-
-    switch (name) {
-      case QueueName.FaceDetection:
-      case QueueName.FacialRecognition: {
-        if (dto.force) {
-          const confirmed = await modalManager.showDialog({ prompt: $t('admin.confirm_reprocess_all_faces') });
-          if (!confirmed) {
-            return;
-          }
-          break;
-        }
-      }
-    }
 
     try {
       await runQueueCommandLegacy({ name, queueCommandDto: dto });

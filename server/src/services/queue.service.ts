@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ClassConstructor } from 'class-transformer';
 import { SystemConfig } from 'src/config';
-import { OnEvent } from 'src/decorators';
+import { OnEvent, OnJob } from 'src/decorators';
 import { AuthDto } from 'src/dtos/auth.dto';
 import {
   mapQueueLegacy,
@@ -23,6 +23,7 @@ import {
   DatabaseLock,
   ImmichWorker,
   JobName,
+  JobStatus,
   QueueCleanType,
   QueueCommand,
   QueueName,
@@ -204,14 +205,6 @@ export class QueueService extends BaseService {
         return this.jobRepository.queue({ name: JobName.FileMigrationQueueAll });
       }
 
-      case QueueName.SmartSearch: {
-        return this.jobRepository.queue({ name: JobName.SmartSearchQueueAll, data: { force } });
-      }
-
-      case QueueName.DuplicateDetection: {
-        return this.jobRepository.queue({ name: JobName.AssetDetectDuplicatesQueueAll, data: { force } });
-      }
-
       case QueueName.MetadataExtraction: {
         return this.jobRepository.queue({ name: JobName.AssetExtractMetadataQueueAll, data: { force } });
       }
@@ -224,24 +217,12 @@ export class QueueService extends BaseService {
         return this.jobRepository.queue({ name: JobName.AssetGenerateThumbnailsQueueAll, data: { force } });
       }
 
-      case QueueName.FaceDetection: {
-        return this.jobRepository.queue({ name: JobName.AssetDetectFacesQueueAll, data: { force } });
-      }
-
-      case QueueName.FacialRecognition: {
-        return this.jobRepository.queue({ name: JobName.FacialRecognitionQueueAll, data: { force } });
-      }
-
       case QueueName.Library: {
         return this.jobRepository.queue({ name: JobName.LibraryScanQueueAll, data: { force } });
       }
 
       case QueueName.BackupDatabase: {
         return this.jobRepository.queue({ name: JobName.DatabaseBackup, data: { force } });
-      }
-
-      case QueueName.Ocr: {
-        return this.jobRepository.queue({ name: JobName.OcrQueueAll, data: { force } });
       }
 
       default: {
@@ -251,12 +232,7 @@ export class QueueService extends BaseService {
   }
 
   private isConcurrentQueue(name: QueueName): name is ConcurrentQueueName {
-    return ![
-      QueueName.FacialRecognition,
-      QueueName.StorageTemplateMigration,
-      QueueName.DuplicateDetection,
-      QueueName.BackupDatabase,
-    ].includes(name);
+    return ![QueueName.StorageTemplateMigration, QueueName.BackupDatabase].includes(name);
   }
 
   async handleNightlyJobs() {
@@ -267,7 +243,6 @@ export class QueueService extends BaseService {
       jobs.push(
         { name: JobName.AssetDeleteCheck },
         { name: JobName.UserDeleteCheck },
-        { name: JobName.PersonCleanup },
         { name: JobName.MemoryCleanup },
         { name: JobName.SessionCleanup },
         { name: JobName.AuditTableCleanup },
@@ -285,10 +260,6 @@ export class QueueService extends BaseService {
 
     if (config.nightlyTasks.missingThumbnails) {
       jobs.push({ name: JobName.AssetGenerateThumbnailsQueueAll, data: { force: false } });
-    }
-
-    if (config.nightlyTasks.clusterNewFaces) {
-      jobs.push({ name: JobName.FacialRecognitionQueueAll, data: { force: false, nightly: true } });
     }
 
     await this.jobRepository.queueAll(jobs);

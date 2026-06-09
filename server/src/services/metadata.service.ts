@@ -20,21 +20,17 @@ import {
   JobName,
   JobStatus,
   QueueName,
-  SourceType,
 } from 'src/enum';
 import { ArgOf } from 'src/repositories/event.repository';
 import { ReverseGeocodeResult } from 'src/repositories/map.repository';
 import { ImmichTags } from 'src/repositories/metadata.repository';
 import { AssetExifTable } from 'src/schema/tables/asset-exif.table';
-import { AssetFaceTable } from 'src/schema/tables/asset-face.table';
-import { PersonTable } from 'src/schema/tables/person.table';
 import { BaseService } from 'src/services/base.service';
 import { JobItem, JobOf } from 'src/types';
 import { getAssetFiles } from 'src/utils/asset.util';
 import { isAssetChecksumConstraint } from 'src/utils/database';
 import { mergeTimeZone } from 'src/utils/date';
 import { mimeTypes } from 'src/utils/mime-types';
-import { isFaceImportEnabled } from 'src/utils/misc';
 import { upsertTags } from 'src/utils/tag';
 import { Tasks } from 'src/utils/tasks';
 
@@ -127,8 +123,6 @@ const getLensModel = (exifTags: ImmichTags): string | null => {
   }
   return lensModel || null;
 };
-
-type ImmichTagsWithFaces = ImmichTags & { RegionInfo: NonNullable<ImmichTags['RegionInfo']> };
 
 type Dates = {
   dateTimeOriginal: Date;
@@ -233,7 +227,7 @@ export class MetadataService extends BaseService {
 
   @OnJob({ name: JobName.AssetExtractMetadata, queue: QueueName.MetadataExtraction })
   async handleMetadataExtraction(data: JobOf<JobName.AssetExtractMetadata>) {
-    const [{ metadata, reverseGeocoding }, asset] = await Promise.all([
+    const [{ reverseGeocoding }, asset] = await Promise.all([
       this.getConfig({ withCache: true }),
       this.assetJobRepository.getForMetadataExtraction(data.id),
     ]);
@@ -340,10 +334,6 @@ export class MetadataService extends BaseService {
 
     if (this.isMotionPhoto(asset, exifTags)) {
       tasks.push(() => this.applyMotionPhotos(asset, exifTags, dates, stats));
-    }
-
-    if (isFaceImportEnabled(metadata) && this.hasTaggedFaces(exifTags)) {
-      tasks.push(() => this.applyTaggedFaces(asset, exifTags));
     }
 
     await tasks.all();
@@ -751,154 +741,6 @@ export class MetadataService extends BaseService {
         `Failed to extract motion video for ${asset.id}: ${asset.originalPath}: ${error}`,
         error?.stack,
       );
-    }
-  }
-
-  private hasTaggedFaces(tags: ImmichTags): tags is ImmichTagsWithFaces {
-    return (
-      tags.RegionInfo !== undefined && tags.RegionInfo.AppliedToDimensions && tags.RegionInfo.RegionList.length > 0
-    );
-  }
-
-  private orientRegionInfo(
-    regionInfo: ImmichTagsWithFaces['RegionInfo'],
-    orientation: ExifOrientation | undefined,
-  ): ImmichTagsWithFaces['RegionInfo'] {
-    // skip default Orientation
-    if (orientation === undefined || orientation === ExifOrientation.Horizontal) {
-      return regionInfo;
-    }
-
-    const isSidewards = this.isOrientationSidewards(orientation);
-
-    // swap image dimensions in AppliedToDimensions if orientation is sidewards
-    const adjustedAppliedToDimensions = isSidewards
-      ? {
-          ...regionInfo.AppliedToDimensions,
-          W: regionInfo.AppliedToDimensions.H,
-          H: regionInfo.AppliedToDimensions.W,
-        }
-      : regionInfo.AppliedToDimensions;
-
-    // update area coordinates and dimensions in RegionList assuming "normalized" unit as per MWG guidelines
-    const adjustedRegionList = regionInfo.RegionList.map((region) => {
-      let { X, Y, W, H } = region.Area;
-      switch (orientation) {
-        case ExifOrientation.MirrorHorizontal: {
-          X = 1 - X;
-          break;
-        }
-        case ExifOrientation.Rotate180: {
-          [X, Y] = [1 - X, 1 - Y];
-          break;
-        }
-        case ExifOrientation.MirrorVertical: {
-          Y = 1 - Y;
-          break;
-        }
-        case ExifOrientation.MirrorHorizontalRotate270CW: {
-          [X, Y] = [Y, X];
-          break;
-        }
-        case ExifOrientation.Rotate90CW: {
-          [X, Y] = [1 - Y, X];
-          break;
-        }
-        case ExifOrientation.MirrorHorizontalRotate90CW: {
-          [X, Y] = [1 - Y, 1 - X];
-          break;
-        }
-        case ExifOrientation.Rotate270CW: {
-          [X, Y] = [Y, 1 - X];
-          break;
-        }
-      }
-      if (isSidewards) {
-        [W, H] = [H, W];
-      }
-      return {
-        ...region,
-        Area: { ...region.Area, X, Y, W, H },
-      };
-    });
-
-    return {
-      ...regionInfo,
-      AppliedToDimensions: adjustedAppliedToDimensions,
-      RegionList: adjustedRegionList,
-    };
-  }
-
-  private async applyTaggedFaces(
-    asset: { id: string; ownerId: string; faces: { id: string; sourceType: SourceType }[]; originalPath: string },
-    tags: ImmichTags,
-  ) {
-    if (!tags.RegionInfo?.AppliedToDimensions || tags.RegionInfo.RegionList.length === 0) {
-      return;
-    }
-
-    const facesToAdd: (Insertable<AssetFaceTable> & { assetId: string })[] = [];
-    const existingNames = await this.personRepository.getDistinctNames(asset.ownerId, { withHidden: true });
-    const existingNameMap = new Map(existingNames.map(({ id, name }) => [name.toLowerCase(), id]));
-    const missing: (Insertable<PersonTable> & { ownerId: string })[] = [];
-    const missingWithFaceAsset: { id: string; ownerId: string; faceAssetId: string }[] = [];
-
-    const adjustedRegionInfo = this.orientRegionInfo(tags.RegionInfo, tags.Orientation);
-    const imageWidth = adjustedRegionInfo.AppliedToDimensions.W;
-    const imageHeight = adjustedRegionInfo.AppliedToDimensions.H;
-
-    for (const region of adjustedRegionInfo.RegionList) {
-      if (!region.Name) {
-        continue;
-      }
-
-      const loweredName = region.Name.toLowerCase();
-      const personId = existingNameMap.get(loweredName) || this.cryptoRepository.randomUUID();
-
-      const face = {
-        id: this.cryptoRepository.randomUUID(),
-        personId,
-        assetId: asset.id,
-        imageWidth,
-        imageHeight,
-        boundingBoxX1: Math.floor((region.Area.X - region.Area.W / 2) * imageWidth),
-        boundingBoxY1: Math.floor((region.Area.Y - region.Area.H / 2) * imageHeight),
-        boundingBoxX2: Math.floor((region.Area.X + region.Area.W / 2) * imageWidth),
-        boundingBoxY2: Math.floor((region.Area.Y + region.Area.H / 2) * imageHeight),
-        sourceType: SourceType.Exif,
-      };
-
-      facesToAdd.push(face);
-      if (!existingNameMap.has(loweredName)) {
-        missing.push({ id: personId, ownerId: asset.ownerId, name: region.Name });
-        missingWithFaceAsset.push({ id: personId, ownerId: asset.ownerId, faceAssetId: face.id });
-      }
-    }
-
-    if (missing.length > 0) {
-      this.logger.debugFn(() => `Creating missing persons: ${missing.map((p) => `${p.name}/${p.id}`)}`);
-      const newPersonIds = await this.personRepository.createAll(missing);
-      const jobs = newPersonIds.map((id) => ({ name: JobName.PersonGenerateThumbnail, data: { id } }) as const);
-      await this.jobRepository.queueAll(jobs);
-    }
-
-    const facesToRemove = asset.faces.filter((face) => face.sourceType === SourceType.Exif).map((face) => face.id);
-    if (facesToRemove.length > 0) {
-      this.logger.debug(`Removing ${facesToRemove.length} faces for asset ${asset.id}: ${asset.originalPath}`);
-    }
-
-    if (facesToAdd.length > 0) {
-      this.logger.debug(
-        `Creating ${facesToAdd.length} faces from metadata for asset ${asset.id}: ${asset.originalPath}`,
-      );
-    }
-
-    if (facesToRemove.length > 0 || facesToAdd.length > 0) {
-      await this.personRepository.refreshFaces(facesToAdd, facesToRemove);
-    }
-
-    if (missingWithFaceAsset.length > 0) {
-      await this.personRepository.updateAll(missingWithFaceAsset);
     }
   }
 

@@ -17,27 +17,19 @@
     QueueName.MetadataExtraction,
     QueueName.Library,
     QueueName.Sidecar,
-    QueueName.SmartSearch,
-    QueueName.FaceDetection,
-    QueueName.FacialRecognition,
     QueueName.VideoConversion,
     QueueName.StorageTemplateMigration,
     QueueName.Migration,
-    QueueName.Ocr,
   ];
 
   function isSystemConfigJobDto(jobName: string): jobName is keyof SystemConfigJobDto {
     return jobName in configToEdit.job;
   }
 
-  const queueTitles: Record<QueueName, string> = $derived({
+  const queueTitles: Partial<Record<QueueName, string>> = $derived({
     [QueueName.ThumbnailGeneration]: $t('admin.thumbnail_generation_job'),
     [QueueName.MetadataExtraction]: $t('admin.metadata_extraction_job'),
     [QueueName.Sidecar]: $t('admin.sidecar_job'),
-    [QueueName.SmartSearch]: $t('admin.machine_learning_smart_search'),
-    [QueueName.DuplicateDetection]: $t('admin.machine_learning_duplicate_detection'),
-    [QueueName.FaceDetection]: $t('admin.face_detection'),
-    [QueueName.FacialRecognition]: $t('admin.machine_learning_facial_recognition'),
     [QueueName.VideoConversion]: $t('admin.video_conversion_job'),
     [QueueName.StorageTemplateMigration]: $t('admin.storage_template_migration'),
     [QueueName.Migration]: $t('admin.migration_job'),
@@ -46,8 +38,6 @@
     [QueueName.Library]: $t('external_libraries'),
     [QueueName.Notifications]: $t('notifications'),
     [QueueName.BackupDatabase]: $t('admin.backup_database'),
-    [QueueName.Ocr]: $t('admin.machine_learning_ocr'),
-    [QueueName.Workflow]: $t('workflows'),
     [QueueName.Editor]: $t('editor'),
   });
 </script>
@@ -61,7 +51,7 @@
             <SettingInputField
               inputType={SettingInputFieldType.NUMBER}
               {disabled}
-              label={$t('admin.job_concurrency', { values: { job: queueTitles[queueName] } })}
+              label={$t('admin.job_concurrency', { values: { job: queueTitles[queueName] ?? queueName } })}
               description=""
               bind:value={configToEdit.job[queueName].concurrency}
               required={true}
@@ -70,7 +60,7 @@
           {:else}
             <SettingInputField
               inputType={SettingInputFieldType.NUMBER}
-              label={$t('admin.job_concurrency', { values: { job: queueTitles[queueName] } })}
+              label={$t('admin.job_concurrency', { values: { job: queueTitles[queueName] ?? queueName } })}
               description=""
               value={1}
               disabled={true}

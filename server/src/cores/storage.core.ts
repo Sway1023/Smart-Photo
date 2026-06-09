@@ -6,7 +6,6 @@ import {
   AssetPathType,
   ImageFormat,
   PathType,
-  PersonPathType,
   RawExtractedFormat,
   StorageFolder,
 } from 'src/enum';
@@ -15,7 +14,6 @@ import { ConfigRepository } from 'src/repositories/config.repository';
 import { CryptoRepository } from 'src/repositories/crypto.repository';
 import { LoggingRepository } from 'src/repositories/logging.repository';
 import { MoveRepository } from 'src/repositories/move.repository';
-import { PersonRepository } from 'src/repositories/person.repository';
 import { StorageRepository } from 'src/repositories/storage.repository';
 import { SystemMetadataRepository } from 'src/repositories/system-metadata.repository';
 import { getAssetFile } from 'src/utils/asset.util';
@@ -46,7 +44,6 @@ export class StorageCore {
     private configRepository: ConfigRepository,
     private cryptoRepository: CryptoRepository,
     private moveRepository: MoveRepository,
-    private personRepository: PersonRepository,
     private storageRepository: StorageRepository,
     private systemMetadataRepository: SystemMetadataRepository,
     private logger: LoggingRepository,
@@ -59,7 +56,6 @@ export class StorageCore {
     configRepository: ConfigRepository,
     cryptoRepository: CryptoRepository,
     moveRepository: MoveRepository,
-    personRepository: PersonRepository,
     storageRepository: StorageRepository,
     systemMetadataRepository: SystemMetadataRepository,
     logger: LoggingRepository,
@@ -70,7 +66,6 @@ export class StorageCore {
         configRepository,
         cryptoRepository,
         moveRepository,
-        personRepository,
         storageRepository,
         systemMetadataRepository,
         logger,
@@ -106,10 +101,6 @@ export class StorageCore {
 
   static getBaseFolder(folder: StorageFolder) {
     return join(StorageCore.getMediaLocation(), folder);
-  }
-
-  static getPersonThumbnailPath(person: ThumbnailPathEntity) {
-    return StorageCore.getNestedPath(StorageFolder.Thumbnails, person.ownerId, `${person.id}.jpeg`);
   }
 
   static getImagePath(asset: ThumbnailPathEntity, { fileType, format, isEdited }: ImagePathOptions) {
@@ -161,20 +152,6 @@ export class StorageCore {
       oldPath: encodedVideoFile?.path || null,
       newPath: StorageCore.getEncodedVideoPath(asset),
     });
-  }
-
-  async movePersonFile(person: { id: string; ownerId: string; thumbnailPath: string }, pathType: PersonPathType) {
-    const { id: entityId, thumbnailPath } = person;
-    switch (pathType) {
-      case PersonPathType.Face: {
-        await this.moveFile({
-          entityId,
-          pathType,
-          oldPath: thumbnailPath,
-          newPath: StorageCore.getPersonThumbnailPath(person),
-        });
-      }
-    }
   }
 
   async moveFile(request: MoveRequest) {
@@ -313,9 +290,6 @@ export class StorageCore {
         return this.assetRepository.upsertFile({ assetId: id, type: pathType as AssetFileType, path: newPath });
       }
 
-      case PersonPathType.Face: {
-        return this.personRepository.update({ id, thumbnailPath: newPath });
-      }
     }
   }
 

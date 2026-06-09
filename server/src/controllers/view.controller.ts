@@ -3,6 +3,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { Endpoint, HistoryBuilder } from 'src/decorators';
 import { AssetResponseDto } from 'src/dtos/asset-response.dto';
 import { AuthDto } from 'src/dtos/auth.dto';
+import { ViewFolderContentResponseDto, ViewFolderQueryDto } from 'src/dtos/view.dto';
 import { ApiTag, Permission } from 'src/enum';
 import { Auth, Authenticated } from 'src/middleware/auth.guard';
 import { ViewService } from 'src/services/view.service';
@@ -19,8 +20,8 @@ export class ViewController {
     description: 'Retrieve a list of unique folder paths from asset original paths.',
     history: new HistoryBuilder().added('v1').beta('v1').stable('v2'),
   })
-  getUniqueOriginalPaths(@Auth() auth: AuthDto): Promise<string[]> {
-    return this.service.getUniqueOriginalPaths(auth);
+  getUniqueOriginalPaths(@Auth() auth: AuthDto, @Query() query: ViewFolderQueryDto): Promise<string[]> {
+    return this.service.getUniqueOriginalPaths(auth, query);
   }
 
   @Get('folder')
@@ -30,7 +31,18 @@ export class ViewController {
     description: 'Retrieve assets that are children of a specific folder.',
     history: new HistoryBuilder().added('v1').beta('v1').stable('v2'),
   })
-  getAssetsByOriginalPath(@Auth() auth: AuthDto, @Query('path') path: string): Promise<AssetResponseDto[]> {
-    return this.service.getAssetsByOriginalPath(auth, path);
+  getAssetsByOriginalPath(@Auth() auth: AuthDto, @Query() query: ViewFolderQueryDto): Promise<AssetResponseDto[]> {
+    return this.service.getAssetsByOriginalPath(auth, query);
+  }
+
+  @Get('folder/content')
+  @Authenticated({ permission: Permission.FolderRead })
+  @Endpoint({
+    summary: 'Retrieve folder content',
+    description: 'Retrieve immediate child folders and assets for a specific folder path.',
+    history: new HistoryBuilder().added('v1').beta('v1').stable('v2'),
+  })
+  getFolderContent(@Auth() auth: AuthDto, @Query() query: ViewFolderQueryDto): Promise<ViewFolderContentResponseDto> {
+    return this.service.getFolderContent(auth, query);
   }
 }

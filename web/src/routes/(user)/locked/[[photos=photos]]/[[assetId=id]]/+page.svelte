@@ -58,8 +58,25 @@
   title={data.meta.title}
   actions={[LockSession]}
   hideNavbar={assetInteraction.selectionActive}
+  showTopBar={assetInteraction.selectionActive}
   scrollbar={false}
 >
+  {#snippet topbar()}
+    <AssetSelectControlBar
+      assets={assetInteraction.selectedAssets}
+      clearSelect={() => assetInteraction.clearMultiselect()}
+    >
+      <SelectAllAssets withText {timelineManager} {assetInteraction} />
+      <SetVisibilityAction unlock onVisibilitySet={handleMoveOffLockedFolder} />
+      <ButtonContextMenu icon={mdiDotsVertical} title={$t('menu')}>
+        <DownloadAction menuItem />
+        <ChangeDate menuItem />
+        <ChangeLocation menuItem />
+        <DeleteAssets menuItem force onAssetDelete={(assetIds) => timelineManager.removeAssets(assetIds)} />
+      </ButtonContextMenu>
+    </AssetSelectControlBar>
+  {/snippet}
+
   <Timeline
     enableRouting={true}
     bind:timelineManager
@@ -73,20 +90,3 @@
     {/snippet}
   </Timeline>
 </UserPageLayout>
-
-<!-- Multi-selection mode app bar -->
-{#if assetInteraction.selectionActive}
-  <AssetSelectControlBar
-    assets={assetInteraction.selectedAssets}
-    clearSelect={() => assetInteraction.clearMultiselect()}
-  >
-    <SelectAllAssets withText {timelineManager} {assetInteraction} />
-    <SetVisibilityAction unlock onVisibilitySet={handleMoveOffLockedFolder} />
-    <ButtonContextMenu icon={mdiDotsVertical} title={$t('menu')}>
-      <DownloadAction menuItem />
-      <ChangeDate menuItem />
-      <ChangeLocation menuItem />
-      <DeleteAssets menuItem force onAssetDelete={(assetIds) => timelineManager.removeAssets(assetIds)} />
-    </ButtonContextMenu>
-  </AssetSelectControlBar>
-{/if}

@@ -6,7 +6,6 @@
   import JobSettings from '$lib/components/admin-settings/JobSettings.svelte';
   import LibrarySettings from '$lib/components/admin-settings/LibrarySettings.svelte';
   import LoggingSettings from '$lib/components/admin-settings/LoggingSettings.svelte';
-  import MachineLearningSettings from '$lib/components/admin-settings/MachineLearningSettings.svelte';
   import MapSettings from '$lib/components/admin-settings/MapSettings.svelte';
   import MetadataSettings from '$lib/components/admin-settings/MetadataSettings.svelte';
   import NewVersionCheckSettings from '$lib/components/admin-settings/NewVersionCheckSettings.svelte';
@@ -39,7 +38,6 @@
     mdiLockOutline,
     mdiMapMarkerOutline,
     mdiPaletteOutline,
-    mdiRobotOutline,
     mdiServerOutline,
     mdiSync,
     mdiTrashCanOutline,
@@ -104,13 +102,6 @@
       subtitle: $t('admin.manage_log_settings'),
       key: 'logging',
       icon: mdiFileDocumentOutline,
-    },
-    {
-      component: MachineLearningSettings,
-      title: $t('admin.machine_learning_settings'),
-      subtitle: $t('admin.machine_learning_settings_description'),
-      key: 'machine-learning',
-      icon: mdiRobotOutline,
     },
     {
       component: MapSettings,

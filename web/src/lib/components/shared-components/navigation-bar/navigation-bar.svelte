@@ -11,12 +11,10 @@
   import { authManager } from '$lib/managers/auth-manager.svelte';
   import { featureFlagsManager } from '$lib/managers/feature-flags-manager.svelte';
   import { Route } from '$lib/route';
-  import { getGlobalActions } from '$lib/services/app.service';
-  import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
   import { notificationManager } from '$lib/stores/notification-manager.svelte';
   import { sidebarStore } from '$lib/stores/sidebar.svelte';
   import { user } from '$lib/stores/user.store';
-  import { ActionButton, Button, IconButton, Logo } from '@immich/ui';
+  import { Button, IconButton } from '@immich/ui';
   import { mdiBellBadge, mdiBellOutline, mdiMagnify, mdiMenu, mdiTrayArrowUp } from '@mdi/js';
   import { onMount } from 'svelte';
   import { t } from 'svelte-i18n';
@@ -44,20 +42,18 @@
       console.error('Failed to load notifications on mount', error);
     }
   });
-
-  const { Cast } = $derived(getGlobalActions($t));
 </script>
 
 <svelte:window bind:innerWidth />
 
-<nav id="dashboard-navbar" class="max-md:h-(--navbar-height-md) h-(--navbar-height) w-dvw text-sm">
+<nav id="dashboard-navbar" class="h-(--navbar-height) max-md:h-(--navbar-height-md) w-full text-sm">
   <SkipLink text={$t('skip_to_content')} />
   <div
-    class="grid h-full grid-cols-[--spacing(32)_auto] items-center py-2 sidebar:grid-cols-[--spacing(64)_auto] {noBorder
+    class="grid h-full grid-cols-[auto_minmax(0,1fr)] items-center py-2 {noBorder
       ? ''
       : 'border-b'}"
   >
-    <div class="flex flex-row gap-1 mx-4 items-center">
+    <div class="mx-3 flex flex-row items-center lg:mx-4">
       <IconButton
         id={menuButtonId}
         shape="round"
@@ -77,12 +73,9 @@
         }}
         class="sidebar:hidden"
       />
-      <a data-sveltekit-preload-data="hover" href={Route.photos()}>
-        <Logo variant={mediaQueryManager.isFullSidebar ? 'inline' : 'icon'} class="max-md:h-12" />
-      </a>
     </div>
-    <div class="flex justify-between gap-4 lg:gap-8 pe-6">
-      <div class="hidden w-full max-w-5xl flex-1 tall:ps-0 sm:block">
+    <div class="flex min-w-0 justify-between gap-4 pe-4 lg:gap-6 lg:pe-6">
+      <div class="hidden min-w-0 flex-1 sm:block">
         {#if featureFlagsManager.value.search}
           <SearchBar grayTheme={true} />
         {/if}
@@ -158,9 +151,6 @@
             <NotificationPanel />
           {/if}
         </div>
-
-        <ActionButton action={Cast} />
-
         <div
           use:clickOutside={{
             onOutclick: () => (shouldShowAccountInfoPanel = false),

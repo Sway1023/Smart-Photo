@@ -17,6 +17,7 @@ class FoldersStore {
   folders = $state.raw<TreeNode | null>(null);
   private initialized = false;
   private assets = $state<AssetCache>({});
+  private readonly externalOnly = true;
 
   constructor() {
     eventManager.on({
@@ -28,7 +29,7 @@ class FoldersStore {
     if (this.initialized) {
       return this.folders!;
     }
-    this.folders = TreeNode.fromPaths(await getUniqueOriginalPaths());
+    this.folders = TreeNode.fromPaths(await getUniqueOriginalPaths({ externalOnly: this.externalOnly }));
     this.folders.collapse();
     this.initialized = true;
     return this.folders;
@@ -39,11 +40,11 @@ class FoldersStore {
   }
 
   async refreshAssetsByPath(path: string) {
-    return (this.assets[path] = await getAssetsByOriginalPath({ path }));
+    return (this.assets[path] = await getAssetsByOriginalPath({ path, externalOnly: this.externalOnly }));
   }
 
   async fetchAssetsByPath(path: string) {
-    return (this.assets[path] ??= await getAssetsByOriginalPath({ path }));
+    return (this.assets[path] ??= await getAssetsByOriginalPath({ path, externalOnly: this.externalOnly }));
   }
 
   clearCache() {

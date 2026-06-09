@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, 
 import { ApiTags } from '@nestjs/swagger';
 import { Endpoint, HistoryBuilder } from 'src/decorators';
 import { AssetResponseDto } from 'src/dtos/asset-response.dto';
+import { CategoryItemDto } from 'src/dtos/category.dto';
 import {
   AssetBulkDeleteDto,
   AssetBulkUpdateDto,
@@ -21,7 +22,6 @@ import {
 } from 'src/dtos/asset.dto';
 import { AuthDto } from 'src/dtos/auth.dto';
 import { AssetEditsCreateDto, AssetEditsResponseDto } from 'src/dtos/editing.dto';
-import { AssetOcrResponseDto } from 'src/dtos/ocr.dto';
 import { ApiTag, Permission, RouteKey } from 'src/enum';
 import { Auth, Authenticated } from 'src/middleware/auth.guard';
 import { AssetService } from 'src/services/asset.service';
@@ -63,6 +63,17 @@ export class AssetController {
   })
   getAssetStatistics(@Auth() auth: AuthDto, @Query() dto: AssetStatsDto): Promise<AssetStatsResponseDto> {
     return this.service.getStatistics(auth, dto);
+  }
+
+  @Get('categories')
+  @Authenticated({ permission: Permission.AssetRead })
+  @Endpoint({
+    summary: 'Get asset categories',
+    description: 'Retrieve derived category statistics for the authenticated user.',
+    history: new HistoryBuilder().added('v2.5.6').beta('v2.5.6'),
+  })
+  getCategories(@Auth() auth: AuthDto): Promise<CategoryItemDto[]> {
+    return this.service.getCategories(auth);
   }
 
   @Post('jobs')
@@ -174,17 +185,6 @@ export class AssetController {
   })
   getAssetMetadata(@Auth() auth: AuthDto, @Param() { id }: UUIDParamDto): Promise<AssetMetadataResponseDto[]> {
     return this.service.getMetadata(auth, id);
-  }
-
-  @Get(':id/ocr')
-  @Authenticated({ permission: Permission.AssetRead })
-  @Endpoint({
-    summary: 'Retrieve asset OCR data',
-    description: 'Retrieve all OCR (Optical Character Recognition) data associated with the specified asset.',
-    history: new HistoryBuilder().added('v1').beta('v1').stable('v2'),
-  })
-  getAssetOcr(@Auth() auth: AuthDto, @Param() { id }: UUIDParamDto): Promise<AssetOcrResponseDto[]> {
-    return this.service.getOcr(auth, id);
   }
 
   @Put(':id/metadata')

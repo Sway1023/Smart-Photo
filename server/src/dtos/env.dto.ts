@@ -65,6 +65,10 @@ export class EnvDto {
   @Matches(/^\//, { message: 'IMMICH_MEDIA_LOCATION must be an absolute path' })
   IMMICH_MEDIA_LOCATION?: string;
 
+  @Optional()
+  @Matches(/^\//, { message: 'IMMICH_EXTERNAL_LIBRARY_ROOT must be an absolute path' })
+  IMMICH_EXTERNAL_LIBRARY_ROOT?: string;
+
   @IsInt()
   @Optional()
   @Type(() => Number)

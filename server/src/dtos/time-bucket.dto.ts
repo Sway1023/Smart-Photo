@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString } from 'class-validator';
 import type { BBoxDto } from 'src/dtos/bbox.dto';
-import { AssetOrder, AssetVisibility } from 'src/enum';
+import { AssetOrder, AssetVisibility, CategoryType } from 'src/enum';
 import { ValidateBBox } from 'src/utils/bbox';
 import { ValidateBoolean, ValidateEnum, ValidateUUID } from 'src/validation';
 
@@ -18,6 +18,14 @@ export class TimeBucketDto {
   @ValidateUUID({ optional: true, description: 'Filter assets with a specific tag' })
   tagId?: string;
 
+  @ValidateEnum({
+    enum: CategoryType,
+    name: 'CategoryType',
+    optional: true,
+    description: 'Filter assets by a derived media category',
+  })
+  categoryType?: CategoryType;
+
   @ValidateBoolean({
     optional: true,
     description: 'Filter by favorite status (true for favorites only, false for non-favorites only)',
@@ -29,6 +37,12 @@ export class TimeBucketDto {
     description: 'Filter by trash status (true for trashed assets only, false for non-trashed only)',
   })
   isTrashed?: boolean;
+
+  @ValidateBoolean({
+    optional: true,
+    description: 'Filter to assets uploaded within the recently-added window (uses asset.createdAt)',
+  })
+  isRecentlyAdded?: boolean;
 
   @ValidateBoolean({
     optional: true,

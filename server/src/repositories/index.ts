@@ -13,7 +13,6 @@ import { CronRepository } from 'src/repositories/cron.repository';
 import { CryptoRepository } from 'src/repositories/crypto.repository';
 import { DatabaseRepository } from 'src/repositories/database.repository';
 import { DownloadRepository } from 'src/repositories/download.repository';
-import { DuplicateRepository } from 'src/repositories/duplicate.repository';
 import { EmailRepository } from 'src/repositories/email.repository';
 import { EventRepository } from 'src/repositories/event.repository';
 import { JobRepository } from 'src/repositories/job.repository';
@@ -27,10 +26,7 @@ import { MetadataRepository } from 'src/repositories/metadata.repository';
 import { MoveRepository } from 'src/repositories/move.repository';
 import { NotificationRepository } from 'src/repositories/notification.repository';
 import { OAuthRepository } from 'src/repositories/oauth.repository';
-import { OcrRepository } from 'src/repositories/ocr.repository';
 import { PartnerRepository } from 'src/repositories/partner.repository';
-import { PersonRepository } from 'src/repositories/person.repository';
-import { PluginRepository } from 'src/repositories/plugin.repository';
 import { ProcessRepository } from 'src/repositories/process.repository';
 import { SearchRepository } from 'src/repositories/search.repository';
 import { ServerInfoRepository } from 'src/repositories/server-info.repository';
@@ -49,7 +45,6 @@ import { UserRepository } from 'src/repositories/user.repository';
 import { VersionHistoryRepository } from 'src/repositories/version-history.repository';
 import { ViewRepository } from 'src/repositories/view-repository';
 import { WebsocketRepository } from 'src/repositories/websocket.repository';
-import { WorkflowRepository } from 'src/repositories/workflow.repository';
 
 export const repositories = [
   AccessRepository,
@@ -67,7 +62,6 @@ export const repositories = [
   CryptoRepository,
   DatabaseRepository,
   DownloadRepository,
-  DuplicateRepository,
   EmailRepository,
   EventRepository,
   JobRepository,
@@ -81,10 +75,7 @@ export const repositories = [
   MoveRepository,
   NotificationRepository,
   OAuthRepository,
-  OcrRepository,
   PartnerRepository,
-  PersonRepository,
-  PluginRepository,
   ProcessRepository,
   SearchRepository,
   SessionRepository,
@@ -103,5 +94,4 @@ export const repositories = [
   ViewRepository,
   VersionHistoryRepository,
   WebsocketRepository,
-  WorkflowRepository,
 ];

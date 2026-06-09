@@ -12,7 +12,6 @@ import {
   AssetFullSyncDto,
   SyncAckDeleteDto,
   SyncAckSetDto,
-  syncAssetFaceV2ToV1,
   SyncAssetV1,
   SyncItem,
   SyncStreamDto,
@@ -84,9 +83,6 @@ export const SYNC_TYPES_ORDER = [
   SyncRequestType.PartnerAssetExifsV1,
   SyncRequestType.MemoriesV1,
   SyncRequestType.MemoryToAssetsV1,
-  SyncRequestType.PeopleV1,
-  SyncRequestType.AssetFacesV1,
-  SyncRequestType.AssetFacesV2,
   SyncRequestType.UserMetadataV1,
   SyncRequestType.AssetMetadataV1,
   SyncRequestType.AssetEditsV1,
@@ -191,9 +187,6 @@ export class SyncService extends BaseService {
       [SyncRequestType.MemoryToAssetsV1]: () => this.syncMemoryAssetsV1(options, response, checkpointMap),
       [SyncRequestType.StacksV1]: () => this.syncStackV1(options, response, checkpointMap),
       [SyncRequestType.PartnerStacksV1]: () => this.syncPartnerStackV1(options, response, checkpointMap, session.id),
-      [SyncRequestType.PeopleV1]: () => this.syncPeopleV1(options, response, checkpointMap),
-      [SyncRequestType.AssetFacesV1]: async () => this.syncAssetFacesV1(options, response, checkpointMap),
-      [SyncRequestType.AssetFacesV2]: async () => this.syncAssetFacesV2(options, response, checkpointMap),
       [SyncRequestType.UserMetadataV1]: () => this.syncUserMetadataV1(options, response, checkpointMap),
     };
 
@@ -215,13 +208,11 @@ export class SyncService extends BaseService {
     await this.syncRepository.albumUser.cleanupAuditTable(pruneThreshold);
     await this.syncRepository.albumToAsset.cleanupAuditTable(pruneThreshold);
     await this.syncRepository.asset.cleanupAuditTable(pruneThreshold);
-    await this.syncRepository.assetFace.cleanupAuditTable(pruneThreshold);
     await this.syncRepository.assetMetadata.cleanupAuditTable(pruneThreshold);
     await this.syncRepository.assetEdit.cleanupAuditTable(pruneThreshold);
     await this.syncRepository.memory.cleanupAuditTable(pruneThreshold);
     await this.syncRepository.memoryToAsset.cleanupAuditTable(pruneThreshold);
     await this.syncRepository.partner.cleanupAuditTable(pruneThreshold);
-    await this.syncRepository.person.cleanupAuditTable(pruneThreshold);
     await this.syncRepository.stack.cleanupAuditTable(pruneThreshold);
     await this.syncRepository.user.cleanupAuditTable(pruneThreshold);
     await this.syncRepository.userMetadata.cleanupAuditTable(pruneThreshold);
@@ -782,49 +773,6 @@ export class SyncService extends BaseService {
     }
 
     const upserts = this.syncRepository.partnerStack.getUpserts({ ...options, ack: checkpointMap[upsertType] });
-    for await (const { updateId, ...data } of upserts) {
-      send(response, { type: upsertType, ids: [updateId], data });
-    }
-  }
-
-  private async syncPeopleV1(options: SyncQueryOptions, response: Writable, checkpointMap: CheckpointMap) {
-    const deleteType = SyncEntityType.PersonDeleteV1;
-    const deletes = this.syncRepository.person.getDeletes({ ...options, ack: checkpointMap[deleteType] });
-    for await (const { id, ...data } of deletes) {
-      send(response, { type: deleteType, ids: [id], data });
-    }
-
-    const upsertType = SyncEntityType.PersonV1;
-    const upserts = this.syncRepository.person.getUpserts({ ...options, ack: checkpointMap[upsertType] });
-    for await (const { updateId, ...data } of upserts) {
-      send(response, { type: upsertType, ids: [updateId], data });
-    }
-  }
-
-  private async syncAssetFacesV1(options: SyncQueryOptions, response: Writable, checkpointMap: CheckpointMap) {
-    const deleteType = SyncEntityType.AssetFaceDeleteV1;
-    const deletes = this.syncRepository.assetFace.getDeletes({ ...options, ack: checkpointMap[deleteType] });
-    for await (const { id, ...data } of deletes) {
-      send(response, { type: deleteType, ids: [id], data });
-    }
-
-    const upsertType = SyncEntityType.AssetFaceV1;
-    const upserts = this.syncRepository.assetFace.getUpserts({ ...options, ack: checkpointMap[upsertType] });
-    for await (const { updateId, ...data } of upserts) {
-      const v1 = syncAssetFaceV2ToV1(data);
-      send(response, { type: upsertType, ids: [updateId], data: v1 });
-    }
-  }
-
-  private async syncAssetFacesV2(options: SyncQueryOptions, response: Writable, checkpointMap: CheckpointMap) {
-    const deleteType = SyncEntityType.AssetFaceDeleteV1;
-    const deletes = this.syncRepository.assetFace.getDeletes({ ...options, ack: checkpointMap[deleteType] });
-    for await (const { id, ...data } of deletes) {
-      send(response, { type: deleteType, ids: [id], data });
-    }
-
-    const upsertType = SyncEntityType.AssetFaceV2;
-    const upserts = this.syncRepository.assetFace.getUpserts({ ...options, ack: checkpointMap[upsertType] });
     for await (const { updateId, ...data } of upserts) {
       send(response, { type: upsertType, ids: [updateId], data });
     }

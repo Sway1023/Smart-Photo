@@ -3019,6 +3019,55 @@
         "x-immich-state": "Stable"
       }
     },
+    "/assets/categories": {
+      "get": {
+        "description": "Retrieve derived category statistics for the authenticated user.",
+        "operationId": "getCategories",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CategoryItemDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          },
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Get asset categories",
+        "tags": [
+          "Assets"
+        ],
+        "x-immich-history": [
+          {
+            "version": "v2.5.6",
+            "state": "Added"
+          },
+          {
+            "version": "v2.5.6",
+            "state": "Beta"
+          }
+        ],
+        "x-immich-permission": "asset.read",
+        "x-immich-state": "Beta"
+      }
+    },
     "/assets/copy": {
       "put": {
         "description": "Copy asset information like albums, tags, etc. from one asset to another.",
@@ -4047,69 +4096,6 @@
           }
         ],
         "summary": "Retrieve asset metadata by key",
-        "tags": [
-          "Assets"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v1",
-            "state": "Added"
-          },
-          {
-            "version": "v1",
-            "state": "Beta"
-          },
-          {
-            "version": "v2",
-            "state": "Stable"
-          }
-        ],
-        "x-immich-permission": "asset.read",
-        "x-immich-state": "Stable"
-      }
-    },
-    "/assets/{id}/ocr": {
-      "get": {
-        "description": "Retrieve all OCR (Optical Character Recognition) data associated with the specified asset.",
-        "operationId": "getAssetOcr",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/AssetOcrResponseDto"
-                  },
-                  "type": "array"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Retrieve asset OCR data",
         "tags": [
           "Assets"
         ],
@@ -5181,409 +5167,6 @@
         "x-immich-state": "Stable"
       }
     },
-    "/duplicates": {
-      "delete": {
-        "description": "Delete multiple duplicate assets specified by their IDs.",
-        "operationId": "deleteDuplicates",
-        "parameters": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BulkIdsDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "204": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Delete duplicates",
-        "tags": [
-          "Duplicates"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v1",
-            "state": "Added"
-          },
-          {
-            "version": "v1",
-            "state": "Beta"
-          },
-          {
-            "version": "v2",
-            "state": "Stable"
-          }
-        ],
-        "x-immich-permission": "duplicate.delete",
-        "x-immich-state": "Stable"
-      },
-      "get": {
-        "description": "Retrieve a list of duplicate assets available to the authenticated user.",
-        "operationId": "getAssetDuplicates",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/DuplicateResponseDto"
-                  },
-                  "type": "array"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Retrieve duplicates",
-        "tags": [
-          "Duplicates"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v1",
-            "state": "Added"
-          },
-          {
-            "version": "v1",
-            "state": "Beta"
-          },
-          {
-            "version": "v2",
-            "state": "Stable"
-          }
-        ],
-        "x-immich-permission": "duplicate.read",
-        "x-immich-state": "Stable"
-      }
-    },
-    "/duplicates/{id}": {
-      "delete": {
-        "description": "Delete a single duplicate asset specified by its ID.",
-        "operationId": "deleteDuplicate",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Delete a duplicate",
-        "tags": [
-          "Duplicates"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v1",
-            "state": "Added"
-          },
-          {
-            "version": "v1",
-            "state": "Beta"
-          },
-          {
-            "version": "v2",
-            "state": "Stable"
-          }
-        ],
-        "x-immich-permission": "duplicate.delete",
-        "x-immich-state": "Stable"
-      }
-    },
-    "/faces": {
-      "get": {
-        "description": "Retrieve all faces belonging to an asset.",
-        "operationId": "getFaces",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "query",
-            "description": "Face ID",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/AssetFaceResponseDto"
-                  },
-                  "type": "array"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Retrieve faces for asset",
-        "tags": [
-          "Faces"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v1",
-            "state": "Added"
-          },
-          {
-            "version": "v1",
-            "state": "Beta"
-          },
-          {
-            "version": "v2",
-            "state": "Stable"
-          }
-        ],
-        "x-immich-permission": "face.read",
-        "x-immich-state": "Stable"
-      },
-      "post": {
-        "description": "Create a new face that has not been discovered by facial recognition. The content of the bounding box is considered a face.",
-        "operationId": "createFace",
-        "parameters": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AssetFaceCreateDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Create a face",
-        "tags": [
-          "Faces"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v1",
-            "state": "Added"
-          },
-          {
-            "version": "v1",
-            "state": "Beta"
-          },
-          {
-            "version": "v2",
-            "state": "Stable"
-          }
-        ],
-        "x-immich-permission": "face.create",
-        "x-immich-state": "Stable"
-      }
-    },
-    "/faces/{id}": {
-      "delete": {
-        "description": "Delete a face identified by the id. Optionally can be force deleted.",
-        "operationId": "deleteFace",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AssetFaceDeleteDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "204": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Delete a face",
-        "tags": [
-          "Faces"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v1",
-            "state": "Added"
-          },
-          {
-            "version": "v1",
-            "state": "Beta"
-          },
-          {
-            "version": "v2",
-            "state": "Stable"
-          }
-        ],
-        "x-immich-permission": "face.delete",
-        "x-immich-state": "Stable"
-      },
-      "put": {
-        "description": "Re-assign the face provided in the body to the person identified by the id in the path parameter.",
-        "operationId": "reassignFacesById",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/FaceDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PersonResponseDto"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Re-assign a face to another person",
-        "tags": [
-          "Faces"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v1",
-            "state": "Added"
-          },
-          {
-            "version": "v1",
-            "state": "Beta"
-          },
-          {
-            "version": "v2",
-            "state": "Stable"
-          }
-        ],
-        "x-immich-permission": "face.update",
-        "x-immich-state": "Stable"
-      }
-    },
     "/jobs": {
       "get": {
         "deprecated": true,
@@ -5880,6 +5463,67 @@
           }
         ],
         "x-immich-permission": "library.create",
+        "x-immich-state": "Stable"
+      }
+    },
+    "/libraries/browse/dirs": {
+      "get": {
+        "description": "Retrieve readable server directories for selecting external library import paths.",
+        "operationId": "browseDirectories",
+        "parameters": [
+          {
+            "name": "path",
+            "required": false,
+            "in": "query",
+            "description": "Absolute server directory path to browse",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowseLibraryDirectoriesResponseDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          },
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Browse server directories",
+        "tags": [
+          "Libraries"
+        ],
+        "x-immich-admin-only": true,
+        "x-immich-history": [
+          {
+            "version": "v1",
+            "state": "Added"
+          },
+          {
+            "version": "v1",
+            "state": "Beta"
+          },
+          {
+            "version": "v2",
+            "state": "Stable"
+          }
+        ],
+        "x-immich-permission": "library.read",
         "x-immich-state": "Stable"
       }
     },
@@ -7938,879 +7582,6 @@
         "x-immich-state": "Stable"
       }
     },
-    "/people": {
-      "delete": {
-        "description": "Bulk delete a list of people at once.",
-        "operationId": "deletePeople",
-        "parameters": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BulkIdsDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "204": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Delete people",
-        "tags": [
-          "People"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v1",
-            "state": "Added"
-          },
-          {
-            "version": "v1",
-            "state": "Beta"
-          },
-          {
-            "version": "v2",
-            "state": "Stable"
-          }
-        ],
-        "x-immich-permission": "person.delete",
-        "x-immich-state": "Stable"
-      },
-      "get": {
-        "description": "Retrieve a list of all people.",
-        "operationId": "getAllPeople",
-        "parameters": [
-          {
-            "name": "closestAssetId",
-            "required": false,
-            "in": "query",
-            "description": "Closest asset ID for similarity search",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "closestPersonId",
-            "required": false,
-            "in": "query",
-            "description": "Closest person ID for similarity search",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "page",
-            "required": false,
-            "in": "query",
-            "description": "Page number for pagination",
-            "schema": {
-              "minimum": 1,
-              "default": 1,
-              "type": "number"
-            }
-          },
-          {
-            "name": "size",
-            "required": false,
-            "in": "query",
-            "description": "Number of items per page",
-            "schema": {
-              "minimum": 1,
-              "maximum": 1000,
-              "default": 500,
-              "type": "number"
-            }
-          },
-          {
-            "name": "withHidden",
-            "required": false,
-            "in": "query",
-            "description": "Include hidden people",
-            "schema": {
-              "type": "boolean"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PeopleResponseDto"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Get all people",
-        "tags": [
-          "People"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v1",
-            "state": "Added"
-          },
-          {
-            "version": "v1",
-            "state": "Beta"
-          },
-          {
-            "version": "v2",
-            "state": "Stable"
-          }
-        ],
-        "x-immich-permission": "person.read",
-        "x-immich-state": "Stable"
-      },
-      "post": {
-        "description": "Create a new person that can have multiple faces assigned to them.",
-        "operationId": "createPerson",
-        "parameters": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PersonCreateDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PersonResponseDto"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Create a person",
-        "tags": [
-          "People"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v1",
-            "state": "Added"
-          },
-          {
-            "version": "v1",
-            "state": "Beta"
-          },
-          {
-            "version": "v2",
-            "state": "Stable"
-          }
-        ],
-        "x-immich-permission": "person.create",
-        "x-immich-state": "Stable"
-      },
-      "put": {
-        "description": "Bulk update multiple people at once.",
-        "operationId": "updatePeople",
-        "parameters": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PeopleUpdateDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/BulkIdResponseDto"
-                  },
-                  "type": "array"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Update people",
-        "tags": [
-          "People"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v1",
-            "state": "Added"
-          },
-          {
-            "version": "v1",
-            "state": "Beta"
-          },
-          {
-            "version": "v2",
-            "state": "Stable"
-          }
-        ],
-        "x-immich-permission": "person.update",
-        "x-immich-state": "Stable"
-      }
-    },
-    "/people/{id}": {
-      "delete": {
-        "description": "Delete an individual person.",
-        "operationId": "deletePerson",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Delete person",
-        "tags": [
-          "People"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v1",
-            "state": "Added"
-          },
-          {
-            "version": "v1",
-            "state": "Beta"
-          },
-          {
-            "version": "v2",
-            "state": "Stable"
-          }
-        ],
-        "x-immich-permission": "person.delete",
-        "x-immich-state": "Stable"
-      },
-      "get": {
-        "description": "Retrieve a person by id.",
-        "operationId": "getPerson",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PersonResponseDto"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Get a person",
-        "tags": [
-          "People"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v1",
-            "state": "Added"
-          },
-          {
-            "version": "v1",
-            "state": "Beta"
-          },
-          {
-            "version": "v2",
-            "state": "Stable"
-          }
-        ],
-        "x-immich-permission": "person.read",
-        "x-immich-state": "Stable"
-      },
-      "put": {
-        "description": "Update an individual person.",
-        "operationId": "updatePerson",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PersonUpdateDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PersonResponseDto"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Update person",
-        "tags": [
-          "People"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v1",
-            "state": "Added"
-          },
-          {
-            "version": "v1",
-            "state": "Beta"
-          },
-          {
-            "version": "v2",
-            "state": "Stable"
-          }
-        ],
-        "x-immich-permission": "person.update",
-        "x-immich-state": "Stable"
-      }
-    },
-    "/people/{id}/merge": {
-      "post": {
-        "description": "Merge a list of people into the person specified in the path parameter.",
-        "operationId": "mergePerson",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MergePersonDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/BulkIdResponseDto"
-                  },
-                  "type": "array"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Merge people",
-        "tags": [
-          "People"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v1",
-            "state": "Added"
-          },
-          {
-            "version": "v1",
-            "state": "Beta"
-          },
-          {
-            "version": "v2",
-            "state": "Stable"
-          }
-        ],
-        "x-immich-permission": "person.merge",
-        "x-immich-state": "Stable"
-      }
-    },
-    "/people/{id}/reassign": {
-      "put": {
-        "description": "Bulk reassign a list of faces to a different person.",
-        "operationId": "reassignFaces",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AssetFaceUpdateDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/PersonResponseDto"
-                  },
-                  "type": "array"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Reassign faces",
-        "tags": [
-          "People"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v1",
-            "state": "Added"
-          },
-          {
-            "version": "v1",
-            "state": "Beta"
-          },
-          {
-            "version": "v2",
-            "state": "Stable"
-          }
-        ],
-        "x-immich-permission": "person.reassign",
-        "x-immich-state": "Stable"
-      }
-    },
-    "/people/{id}/statistics": {
-      "get": {
-        "description": "Retrieve statistics about a specific person.",
-        "operationId": "getPersonStatistics",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PersonStatisticsResponseDto"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Get person statistics",
-        "tags": [
-          "People"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v1",
-            "state": "Added"
-          },
-          {
-            "version": "v1",
-            "state": "Beta"
-          },
-          {
-            "version": "v2",
-            "state": "Stable"
-          }
-        ],
-        "x-immich-permission": "person.statistics",
-        "x-immich-state": "Stable"
-      }
-    },
-    "/people/{id}/thumbnail": {
-      "get": {
-        "description": "Retrieve the thumbnail file for a person.",
-        "operationId": "getPersonThumbnail",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/octet-stream": {
-                "schema": {
-                  "format": "binary",
-                  "type": "string"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Get person thumbnail",
-        "tags": [
-          "People"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v1",
-            "state": "Added"
-          },
-          {
-            "version": "v1",
-            "state": "Beta"
-          },
-          {
-            "version": "v2",
-            "state": "Stable"
-          }
-        ],
-        "x-immich-permission": "person.read",
-        "x-immich-state": "Stable"
-      }
-    },
-    "/plugins": {
-      "get": {
-        "description": "Retrieve a list of plugins available to the authenticated user.",
-        "operationId": "getPlugins",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/PluginResponseDto"
-                  },
-                  "type": "array"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "List all plugins",
-        "tags": [
-          "Plugins"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v2.3.0",
-            "state": "Added"
-          },
-          {
-            "version": "v2.3.0",
-            "state": "Alpha"
-          }
-        ],
-        "x-immich-permission": "plugin.read",
-        "x-immich-state": "Alpha"
-      }
-    },
-    "/plugins/triggers": {
-      "get": {
-        "description": "Retrieve a list of all available plugin triggers.",
-        "operationId": "getPluginTriggers",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/PluginTriggerResponseDto"
-                  },
-                  "type": "array"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "List all plugin triggers",
-        "tags": [
-          "Plugins"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v2.3.0",
-            "state": "Added"
-          },
-          {
-            "version": "v2.3.0",
-            "state": "Alpha"
-          }
-        ],
-        "x-immich-permission": "plugin.read",
-        "x-immich-state": "Alpha"
-      }
-    },
-    "/plugins/{id}": {
-      "get": {
-        "description": "Retrieve information about a specific plugin by its ID.",
-        "operationId": "getPlugin",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PluginResponseDto"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Retrieve a plugin",
-        "tags": [
-          "Plugins"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v2.3.0",
-            "state": "Added"
-          },
-          {
-            "version": "v2.3.0",
-            "state": "Alpha"
-          }
-        ],
-        "x-immich-permission": "plugin.read",
-        "x-immich-state": "Alpha"
-      }
-    },
     "/queues": {
       "get": {
         "description": "Retrieves a list of queues.",
@@ -9671,78 +8442,6 @@
         "x-immich-state": "Stable"
       }
     },
-    "/search/person": {
-      "get": {
-        "description": "Search for people by name.",
-        "operationId": "searchPerson",
-        "parameters": [
-          {
-            "name": "name",
-            "required": true,
-            "in": "query",
-            "description": "Person name to search for",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "withHidden",
-            "required": false,
-            "in": "query",
-            "description": "Include hidden people",
-            "schema": {
-              "type": "boolean"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/PersonResponseDto"
-                  },
-                  "type": "array"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Search people",
-        "tags": [
-          "Search"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v1",
-            "state": "Added"
-          },
-          {
-            "version": "v1",
-            "state": "Beta"
-          },
-          {
-            "version": "v2",
-            "state": "Stable"
-          }
-        ],
-        "x-immich-permission": "person.read",
-        "x-immich-state": "Stable"
-      }
-    },
     "/search/places": {
       "get": {
         "description": "Search for places by name.",
@@ -9848,66 +8547,6 @@
           }
         ],
         "summary": "Search random assets",
-        "tags": [
-          "Search"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v1",
-            "state": "Added"
-          },
-          {
-            "version": "v1",
-            "state": "Beta"
-          },
-          {
-            "version": "v2",
-            "state": "Stable"
-          }
-        ],
-        "x-immich-permission": "asset.read",
-        "x-immich-state": "Stable"
-      }
-    },
-    "/search/smart": {
-      "post": {
-        "description": "Perform a smart search for assets by using machine learning vectors to determine relevance.",
-        "operationId": "searchSmart",
-        "parameters": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SmartSearchDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SearchResponseDto"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Smart asset search",
         "tags": [
           "Search"
         ],
@@ -13488,10 +12127,28 @@
             }
           },
           {
+            "name": "categoryType",
+            "required": false,
+            "in": "query",
+            "description": "Filter assets by a derived media category",
+            "schema": {
+              "$ref": "#/components/schemas/CategoryType"
+            }
+          },
+          {
             "name": "isFavorite",
             "required": false,
             "in": "query",
             "description": "Filter by favorite status (true for favorites only, false for non-favorites only)",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "isRecentlyAdded",
+            "required": false,
+            "in": "query",
+            "description": "Filter to assets uploaded within the recently-added window (uses asset.createdAt)",
             "schema": {
               "type": "boolean"
             }
@@ -13674,10 +12331,28 @@
             }
           },
           {
+            "name": "categoryType",
+            "required": false,
+            "in": "query",
+            "description": "Filter assets by a derived media category",
+            "schema": {
+              "$ref": "#/components/schemas/CategoryType"
+            }
+          },
+          {
             "name": "isFavorite",
             "required": false,
             "in": "query",
             "description": "Filter by favorite status (true for favorites only, false for non-favorites only)",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "isRecentlyAdded",
+            "required": false,
+            "in": "query",
+            "description": "Filter to assets uploaded within the recently-added window (uses asset.createdAt)",
             "schema": {
               "type": "boolean"
             }
@@ -14783,9 +13458,19 @@
         "operationId": "getAssetsByOriginalPath",
         "parameters": [
           {
-            "name": "path",
-            "required": true,
+            "name": "externalOnly",
+            "required": false,
             "in": "query",
+            "description": "Only include externally scanned library assets",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "path",
+            "required": false,
+            "in": "query",
+            "description": "Folder path to browse",
             "schema": {
               "type": "string"
             }
@@ -14839,11 +13524,99 @@
         "x-immich-state": "Stable"
       }
     },
+    "/view/folder/content": {
+      "get": {
+        "description": "Retrieve immediate child folders and assets for a specific folder path.",
+        "operationId": "getFolderContent",
+        "parameters": [
+          {
+            "name": "externalOnly",
+            "required": false,
+            "in": "query",
+            "description": "Only include externally scanned library assets",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "path",
+            "required": false,
+            "in": "query",
+            "description": "Folder path to browse",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ViewFolderContentResponseDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          },
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Retrieve folder content",
+        "tags": [
+          "Views"
+        ],
+        "x-immich-history": [
+          {
+            "version": "v1",
+            "state": "Added"
+          },
+          {
+            "version": "v1",
+            "state": "Beta"
+          },
+          {
+            "version": "v2",
+            "state": "Stable"
+          }
+        ],
+        "x-immich-permission": "folder.read",
+        "x-immich-state": "Stable"
+      }
+    },
     "/view/folder/unique-paths": {
       "get": {
         "description": "Retrieve a list of unique folder paths from asset original paths.",
         "operationId": "getUniqueOriginalPaths",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "externalOnly",
+            "required": false,
+            "in": "query",
+            "description": "Only include externally scanned library assets",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "path",
+            "required": false,
+            "in": "query",
+            "description": "Folder path to browse",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -14890,276 +13663,6 @@
         ],
         "x-immich-permission": "folder.read",
         "x-immich-state": "Stable"
-      }
-    },
-    "/workflows": {
-      "get": {
-        "description": "Retrieve a list of workflows available to the authenticated user.",
-        "operationId": "getWorkflows",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/WorkflowResponseDto"
-                  },
-                  "type": "array"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "List all workflows",
-        "tags": [
-          "Workflows"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v2.3.0",
-            "state": "Added"
-          },
-          {
-            "version": "v2.3.0",
-            "state": "Alpha"
-          }
-        ],
-        "x-immich-permission": "workflow.read",
-        "x-immich-state": "Alpha"
-      },
-      "post": {
-        "description": "Create a new workflow, the workflow can also be created with empty filters and actions.",
-        "operationId": "createWorkflow",
-        "parameters": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/WorkflowCreateDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WorkflowResponseDto"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Create a workflow",
-        "tags": [
-          "Workflows"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v2.3.0",
-            "state": "Added"
-          },
-          {
-            "version": "v2.3.0",
-            "state": "Alpha"
-          }
-        ],
-        "x-immich-permission": "workflow.create",
-        "x-immich-state": "Alpha"
-      }
-    },
-    "/workflows/{id}": {
-      "delete": {
-        "description": "Delete a workflow by its ID.",
-        "operationId": "deleteWorkflow",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Delete a workflow",
-        "tags": [
-          "Workflows"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v2.3.0",
-            "state": "Added"
-          },
-          {
-            "version": "v2.3.0",
-            "state": "Alpha"
-          }
-        ],
-        "x-immich-permission": "workflow.delete",
-        "x-immich-state": "Alpha"
-      },
-      "get": {
-        "description": "Retrieve information about a specific workflow by its ID.",
-        "operationId": "getWorkflow",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WorkflowResponseDto"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Retrieve a workflow",
-        "tags": [
-          "Workflows"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v2.3.0",
-            "state": "Added"
-          },
-          {
-            "version": "v2.3.0",
-            "state": "Alpha"
-          }
-        ],
-        "x-immich-permission": "workflow.read",
-        "x-immich-state": "Alpha"
-      },
-      "put": {
-        "description": "Update the information of a specific workflow by its ID. This endpoint can be used to update the workflow name, description, trigger type, filters and actions order, etc.",
-        "operationId": "updateWorkflow",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/WorkflowUpdateDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WorkflowResponseDto"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          },
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "Update a workflow",
-        "tags": [
-          "Workflows"
-        ],
-        "x-immich-history": [
-          {
-            "version": "v2.3.0",
-            "state": "Added"
-          },
-          {
-            "version": "v2.3.0",
-            "state": "Alpha"
-          }
-        ],
-        "x-immich-permission": "workflow.update",
-        "x-immich-state": "Alpha"
       }
     }
   },
@@ -16225,162 +14728,6 @@
         ],
         "type": "object"
       },
-      "AssetFaceCreateDto": {
-        "properties": {
-          "assetId": {
-            "description": "Asset ID",
-            "format": "uuid",
-            "type": "string"
-          },
-          "height": {
-            "description": "Face bounding box height",
-            "type": "integer"
-          },
-          "imageHeight": {
-            "description": "Image height in pixels",
-            "type": "integer"
-          },
-          "imageWidth": {
-            "description": "Image width in pixels",
-            "type": "integer"
-          },
-          "personId": {
-            "description": "Person ID",
-            "format": "uuid",
-            "type": "string"
-          },
-          "width": {
-            "description": "Face bounding box width",
-            "type": "integer"
-          },
-          "x": {
-            "description": "Face bounding box X coordinate",
-            "type": "integer"
-          },
-          "y": {
-            "description": "Face bounding box Y coordinate",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "assetId",
-          "height",
-          "imageHeight",
-          "imageWidth",
-          "personId",
-          "width",
-          "x",
-          "y"
-        ],
-        "type": "object"
-      },
-      "AssetFaceDeleteDto": {
-        "properties": {
-          "force": {
-            "description": "Force delete even if person has other faces",
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "force"
-        ],
-        "type": "object"
-      },
-      "AssetFaceResponseDto": {
-        "properties": {
-          "boundingBoxX1": {
-            "description": "Bounding box X1 coordinate",
-            "type": "integer"
-          },
-          "boundingBoxX2": {
-            "description": "Bounding box X2 coordinate",
-            "type": "integer"
-          },
-          "boundingBoxY1": {
-            "description": "Bounding box Y1 coordinate",
-            "type": "integer"
-          },
-          "boundingBoxY2": {
-            "description": "Bounding box Y2 coordinate",
-            "type": "integer"
-          },
-          "id": {
-            "description": "Face ID",
-            "format": "uuid",
-            "type": "string"
-          },
-          "imageHeight": {
-            "description": "Image height in pixels",
-            "type": "integer"
-          },
-          "imageWidth": {
-            "description": "Image width in pixels",
-            "type": "integer"
-          },
-          "person": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PersonResponseDto"
-              }
-            ],
-            "description": "Person associated with face",
-            "nullable": true
-          },
-          "sourceType": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/SourceType"
-              }
-            ],
-            "description": "Face detection source type"
-          }
-        },
-        "required": [
-          "boundingBoxX1",
-          "boundingBoxX2",
-          "boundingBoxY1",
-          "boundingBoxY2",
-          "id",
-          "imageHeight",
-          "imageWidth",
-          "person"
-        ],
-        "type": "object"
-      },
-      "AssetFaceUpdateDto": {
-        "properties": {
-          "data": {
-            "description": "Face update items",
-            "items": {
-              "$ref": "#/components/schemas/AssetFaceUpdateItem"
-            },
-            "type": "array"
-          }
-        },
-        "required": [
-          "data"
-        ],
-        "type": "object"
-      },
-      "AssetFaceUpdateItem": {
-        "properties": {
-          "assetId": {
-            "description": "Asset ID",
-            "format": "uuid",
-            "type": "string"
-          },
-          "personId": {
-            "description": "Person ID",
-            "format": "uuid",
-            "type": "string"
-          }
-        },
-        "required": [
-          "assetId",
-          "personId"
-        ],
-        "type": "object"
-      },
       "AssetFaceWithoutPersonResponseDto": {
         "properties": {
           "boundingBoxX1": {
@@ -16846,88 +15193,6 @@
         ],
         "type": "object"
       },
-      "AssetOcrResponseDto": {
-        "properties": {
-          "assetId": {
-            "format": "uuid",
-            "type": "string"
-          },
-          "boxScore": {
-            "description": "Confidence score for text detection box",
-            "format": "double",
-            "type": "number"
-          },
-          "id": {
-            "format": "uuid",
-            "type": "string"
-          },
-          "text": {
-            "description": "Recognized text",
-            "type": "string"
-          },
-          "textScore": {
-            "description": "Confidence score for text recognition",
-            "format": "double",
-            "type": "number"
-          },
-          "x1": {
-            "description": "Normalized x coordinate of box corner 1 (0-1)",
-            "format": "double",
-            "type": "number"
-          },
-          "x2": {
-            "description": "Normalized x coordinate of box corner 2 (0-1)",
-            "format": "double",
-            "type": "number"
-          },
-          "x3": {
-            "description": "Normalized x coordinate of box corner 3 (0-1)",
-            "format": "double",
-            "type": "number"
-          },
-          "x4": {
-            "description": "Normalized x coordinate of box corner 4 (0-1)",
-            "format": "double",
-            "type": "number"
-          },
-          "y1": {
-            "description": "Normalized y coordinate of box corner 1 (0-1)",
-            "format": "double",
-            "type": "number"
-          },
-          "y2": {
-            "description": "Normalized y coordinate of box corner 2 (0-1)",
-            "format": "double",
-            "type": "number"
-          },
-          "y3": {
-            "description": "Normalized y coordinate of box corner 3 (0-1)",
-            "format": "double",
-            "type": "number"
-          },
-          "y4": {
-            "description": "Normalized y coordinate of box corner 4 (0-1)",
-            "format": "double",
-            "type": "number"
-          }
-        },
-        "required": [
-          "assetId",
-          "boxScore",
-          "id",
-          "text",
-          "textScore",
-          "x1",
-          "x2",
-          "x3",
-          "x4",
-          "y1",
-          "y2",
-          "y3",
-          "y4"
-        ],
-        "type": "object"
-      },
       "AssetOrder": {
         "description": "Asset sort order",
         "enum": [
@@ -17293,6 +15558,46 @@
         },
         "type": "object"
       },
+      "BrowseLibraryDirectoriesResponseDto": {
+        "properties": {
+          "currentPath": {
+            "description": "Current absolute server directory path",
+            "type": "string"
+          },
+          "directories": {
+            "description": "Child directories",
+            "items": {
+              "$ref": "#/components/schemas/BrowseLibraryDirectoryEntryDto"
+            },
+            "type": "array"
+          },
+          "parentPath": {
+            "description": "Parent absolute server directory path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "directories"
+        ],
+        "type": "object"
+      },
+      "BrowseLibraryDirectoryEntryDto": {
+        "properties": {
+          "name": {
+            "description": "Directory name",
+            "type": "string"
+          },
+          "path": {
+            "description": "Absolute server directory path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "path"
+        ],
+        "type": "object"
+      },
       "BulkIdErrorReason": {
         "description": "Error reason",
         "enum": [
@@ -17393,6 +15698,65 @@
           }
         },
         "type": "object"
+      },
+      "CategoryCoverDto": {
+        "properties": {
+          "id": {
+            "description": "Asset ID used as the category cover",
+            "type": "string"
+          },
+          "thumbhash": {
+            "description": "Base64 encoded thumbhash for the cover asset",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "thumbhash"
+        ],
+        "type": "object"
+      },
+      "CategoryItemDto": {
+        "properties": {
+          "count": {
+            "description": "Number of assets in the category",
+            "type": "integer"
+          },
+          "cover": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CategoryCoverDto"
+              }
+            ],
+            "description": "Latest visible asset used as the category cover",
+            "nullable": true
+          },
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CategoryType"
+              }
+            ],
+            "description": "Derived category type for the asset collection"
+          }
+        },
+        "required": [
+          "count",
+          "cover",
+          "type"
+        ],
+        "type": "object"
+      },
+      "CategoryType": {
+        "description": "Derived category type for the asset collection",
+        "enum": [
+          "PICTURES",
+          "ANIMATION",
+          "LIVE_PHOTO",
+          "VIDEO"
+        ],
+        "type": "string"
       },
       "ChangePasswordDto": {
         "properties": {
@@ -17828,26 +16192,6 @@
         ],
         "type": "object"
       },
-      "DuplicateResponseDto": {
-        "properties": {
-          "assets": {
-            "description": "Duplicate assets",
-            "items": {
-              "$ref": "#/components/schemas/AssetResponseDto"
-            },
-            "type": "array"
-          },
-          "duplicateId": {
-            "description": "Duplicate group ID",
-            "type": "string"
-          }
-        },
-        "required": [
-          "assets",
-          "duplicateId"
-        ],
-        "type": "object"
-      },
       "EmailNotificationsResponse": {
         "properties": {
           "albumInvite": {
@@ -18025,19 +16369,6 @@
             "type": "string"
           }
         },
-        "type": "object"
-      },
-      "FaceDto": {
-        "properties": {
-          "id": {
-            "description": "Face ID",
-            "format": "uuid",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id"
-        ],
         "type": "object"
       },
       "FacialRecognitionConfig": {
@@ -18878,22 +17209,6 @@
         },
         "type": "object"
       },
-      "MergePersonDto": {
-        "properties": {
-          "ids": {
-            "description": "Person IDs to merge",
-            "items": {
-              "format": "uuid",
-              "type": "string"
-            },
-            "type": "array"
-          }
-        },
-        "required": [
-          "ids"
-        ],
-        "type": "object"
-      },
       "MetadataSearchDto": {
         "properties": {
           "albumIds": {
@@ -19570,46 +17885,6 @@
         ],
         "type": "object"
       },
-      "PeopleResponseDto": {
-        "properties": {
-          "hasNextPage": {
-            "description": "Whether there are more pages",
-            "type": "boolean",
-            "x-immich-history": [
-              {
-                "version": "v1.110.0",
-                "state": "Added"
-              },
-              {
-                "version": "v2",
-                "state": "Stable"
-              }
-            ],
-            "x-immich-state": "Stable"
-          },
-          "hidden": {
-            "description": "Number of hidden people",
-            "type": "integer"
-          },
-          "people": {
-            "description": "List of people",
-            "items": {
-              "$ref": "#/components/schemas/PersonResponseDto"
-            },
-            "type": "array"
-          },
-          "total": {
-            "description": "Total number of people",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "hidden",
-          "people",
-          "total"
-        ],
-        "type": "object"
-      },
       "PeopleUpdate": {
         "properties": {
           "enabled": {
@@ -19621,61 +17896,6 @@
             "type": "boolean"
           }
         },
-        "type": "object"
-      },
-      "PeopleUpdateDto": {
-        "properties": {
-          "people": {
-            "description": "People to update",
-            "items": {
-              "$ref": "#/components/schemas/PeopleUpdateItem"
-            },
-            "type": "array"
-          }
-        },
-        "required": [
-          "people"
-        ],
-        "type": "object"
-      },
-      "PeopleUpdateItem": {
-        "properties": {
-          "birthDate": {
-            "description": "Person date of birth",
-            "format": "date",
-            "nullable": true,
-            "type": "string"
-          },
-          "color": {
-            "description": "Person color (hex)",
-            "nullable": true,
-            "type": "string"
-          },
-          "featureFaceAssetId": {
-            "description": "Asset ID used for feature face thumbnail",
-            "format": "uuid",
-            "type": "string"
-          },
-          "id": {
-            "description": "Person ID",
-            "type": "string"
-          },
-          "isFavorite": {
-            "description": "Mark as favorite",
-            "type": "boolean"
-          },
-          "isHidden": {
-            "description": "Person visibility (hidden)",
-            "type": "boolean"
-          },
-          "name": {
-            "description": "Person name",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id"
-        ],
         "type": "object"
       },
       "Permission": {
@@ -19839,159 +18059,6 @@
           "adminAuth.unlinkAll"
         ],
         "type": "string"
-      },
-      "PersonCreateDto": {
-        "properties": {
-          "birthDate": {
-            "description": "Person date of birth",
-            "format": "date",
-            "nullable": true,
-            "type": "string"
-          },
-          "color": {
-            "description": "Person color (hex)",
-            "nullable": true,
-            "type": "string"
-          },
-          "isFavorite": {
-            "description": "Mark as favorite",
-            "type": "boolean"
-          },
-          "isHidden": {
-            "description": "Person visibility (hidden)",
-            "type": "boolean"
-          },
-          "name": {
-            "description": "Person name",
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "PersonResponseDto": {
-        "properties": {
-          "birthDate": {
-            "description": "Person date of birth",
-            "format": "date",
-            "nullable": true,
-            "type": "string"
-          },
-          "color": {
-            "description": "Person color (hex)",
-            "type": "string",
-            "x-immich-history": [
-              {
-                "version": "v1.126.0",
-                "state": "Added"
-              },
-              {
-                "version": "v2",
-                "state": "Stable"
-              }
-            ],
-            "x-immich-state": "Stable"
-          },
-          "id": {
-            "description": "Person ID",
-            "type": "string"
-          },
-          "isFavorite": {
-            "description": "Is favorite",
-            "type": "boolean",
-            "x-immich-history": [
-              {
-                "version": "v1.126.0",
-                "state": "Added"
-              },
-              {
-                "version": "v2",
-                "state": "Stable"
-              }
-            ],
-            "x-immich-state": "Stable"
-          },
-          "isHidden": {
-            "description": "Is hidden",
-            "type": "boolean"
-          },
-          "name": {
-            "description": "Person name",
-            "type": "string"
-          },
-          "thumbnailPath": {
-            "description": "Thumbnail path",
-            "type": "string"
-          },
-          "updatedAt": {
-            "description": "Last update date",
-            "format": "date-time",
-            "type": "string",
-            "x-immich-history": [
-              {
-                "version": "v1.107.0",
-                "state": "Added"
-              },
-              {
-                "version": "v2",
-                "state": "Stable"
-              }
-            ],
-            "x-immich-state": "Stable"
-          }
-        },
-        "required": [
-          "birthDate",
-          "id",
-          "isHidden",
-          "name",
-          "thumbnailPath"
-        ],
-        "type": "object"
-      },
-      "PersonStatisticsResponseDto": {
-        "properties": {
-          "assets": {
-            "description": "Number of assets",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "assets"
-        ],
-        "type": "object"
-      },
-      "PersonUpdateDto": {
-        "properties": {
-          "birthDate": {
-            "description": "Person date of birth",
-            "format": "date",
-            "nullable": true,
-            "type": "string"
-          },
-          "color": {
-            "description": "Person color (hex)",
-            "nullable": true,
-            "type": "string"
-          },
-          "featureFaceAssetId": {
-            "description": "Asset ID used for feature face thumbnail",
-            "format": "uuid",
-            "type": "string"
-          },
-          "isFavorite": {
-            "description": "Mark as favorite",
-            "type": "boolean"
-          },
-          "isHidden": {
-            "description": "Person visibility (hidden)",
-            "type": "boolean"
-          },
-          "name": {
-            "description": "Person name",
-            "type": "string"
-          }
-        },
-        "type": "object"
       },
       "PersonWithFacesResponseDto": {
         "properties": {
@@ -20159,203 +18226,6 @@
           "name"
         ],
         "type": "object"
-      },
-      "PluginActionResponseDto": {
-        "properties": {
-          "description": {
-            "description": "Action description",
-            "type": "string"
-          },
-          "id": {
-            "description": "Action ID",
-            "type": "string"
-          },
-          "methodName": {
-            "description": "Method name",
-            "type": "string"
-          },
-          "pluginId": {
-            "description": "Plugin ID",
-            "type": "string"
-          },
-          "schema": {
-            "description": "Action schema",
-            "nullable": true,
-            "type": "object"
-          },
-          "supportedContexts": {
-            "description": "Supported contexts",
-            "items": {
-              "$ref": "#/components/schemas/PluginContextType"
-            },
-            "type": "array"
-          },
-          "title": {
-            "description": "Action title",
-            "type": "string"
-          }
-        },
-        "required": [
-          "description",
-          "id",
-          "methodName",
-          "pluginId",
-          "schema",
-          "supportedContexts",
-          "title"
-        ],
-        "type": "object"
-      },
-      "PluginContextType": {
-        "description": "Context type",
-        "enum": [
-          "asset",
-          "album",
-          "person"
-        ],
-        "type": "string"
-      },
-      "PluginFilterResponseDto": {
-        "properties": {
-          "description": {
-            "description": "Filter description",
-            "type": "string"
-          },
-          "id": {
-            "description": "Filter ID",
-            "type": "string"
-          },
-          "methodName": {
-            "description": "Method name",
-            "type": "string"
-          },
-          "pluginId": {
-            "description": "Plugin ID",
-            "type": "string"
-          },
-          "schema": {
-            "description": "Filter schema",
-            "nullable": true,
-            "type": "object"
-          },
-          "supportedContexts": {
-            "description": "Supported contexts",
-            "items": {
-              "$ref": "#/components/schemas/PluginContextType"
-            },
-            "type": "array"
-          },
-          "title": {
-            "description": "Filter title",
-            "type": "string"
-          }
-        },
-        "required": [
-          "description",
-          "id",
-          "methodName",
-          "pluginId",
-          "schema",
-          "supportedContexts",
-          "title"
-        ],
-        "type": "object"
-      },
-      "PluginResponseDto": {
-        "properties": {
-          "actions": {
-            "description": "Plugin actions",
-            "items": {
-              "$ref": "#/components/schemas/PluginActionResponseDto"
-            },
-            "type": "array"
-          },
-          "author": {
-            "description": "Plugin author",
-            "type": "string"
-          },
-          "createdAt": {
-            "description": "Creation date",
-            "type": "string"
-          },
-          "description": {
-            "description": "Plugin description",
-            "type": "string"
-          },
-          "filters": {
-            "description": "Plugin filters",
-            "items": {
-              "$ref": "#/components/schemas/PluginFilterResponseDto"
-            },
-            "type": "array"
-          },
-          "id": {
-            "description": "Plugin ID",
-            "type": "string"
-          },
-          "name": {
-            "description": "Plugin name",
-            "type": "string"
-          },
-          "title": {
-            "description": "Plugin title",
-            "type": "string"
-          },
-          "updatedAt": {
-            "description": "Last update date",
-            "type": "string"
-          },
-          "version": {
-            "description": "Plugin version",
-            "type": "string"
-          }
-        },
-        "required": [
-          "actions",
-          "author",
-          "createdAt",
-          "description",
-          "filters",
-          "id",
-          "name",
-          "title",
-          "updatedAt",
-          "version"
-        ],
-        "type": "object"
-      },
-      "PluginTriggerResponseDto": {
-        "properties": {
-          "contextType": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PluginContextType"
-              }
-            ],
-            "description": "Context type"
-          },
-          "type": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PluginTriggerType"
-              }
-            ],
-            "description": "Trigger type"
-          }
-        },
-        "required": [
-          "contextType",
-          "type"
-        ],
-        "type": "object"
-      },
-      "PluginTriggerType": {
-        "description": "Trigger type",
-        "enum": [
-          "AssetCreate",
-          "PersonRecognized"
-        ],
-        "type": "string"
       },
       "PurchaseResponse": {
         "properties": {
@@ -22055,210 +19925,6 @@
           "name",
           "password"
         ],
-        "type": "object"
-      },
-      "SmartSearchDto": {
-        "properties": {
-          "albumIds": {
-            "description": "Filter by album IDs",
-            "items": {
-              "format": "uuid",
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "city": {
-            "description": "Filter by city name",
-            "nullable": true,
-            "type": "string"
-          },
-          "country": {
-            "description": "Filter by country name",
-            "nullable": true,
-            "type": "string"
-          },
-          "createdAfter": {
-            "description": "Filter by creation date (after)",
-            "format": "date-time",
-            "type": "string"
-          },
-          "createdBefore": {
-            "description": "Filter by creation date (before)",
-            "format": "date-time",
-            "type": "string"
-          },
-          "deviceId": {
-            "description": "Device ID to filter by",
-            "type": "string"
-          },
-          "isEncoded": {
-            "description": "Filter by encoded status",
-            "type": "boolean"
-          },
-          "isFavorite": {
-            "description": "Filter by favorite status",
-            "type": "boolean"
-          },
-          "isMotion": {
-            "description": "Filter by motion photo status",
-            "type": "boolean"
-          },
-          "isNotInAlbum": {
-            "description": "Filter assets not in any album",
-            "type": "boolean"
-          },
-          "isOffline": {
-            "description": "Filter by offline status",
-            "type": "boolean"
-          },
-          "language": {
-            "description": "Search language code",
-            "type": "string"
-          },
-          "lensModel": {
-            "description": "Filter by lens model",
-            "nullable": true,
-            "type": "string"
-          },
-          "libraryId": {
-            "description": "Library ID to filter by",
-            "format": "uuid",
-            "nullable": true,
-            "type": "string"
-          },
-          "make": {
-            "description": "Filter by camera make",
-            "type": "string"
-          },
-          "model": {
-            "description": "Filter by camera model",
-            "nullable": true,
-            "type": "string"
-          },
-          "ocr": {
-            "description": "Filter by OCR text content",
-            "type": "string"
-          },
-          "page": {
-            "description": "Page number",
-            "minimum": 1,
-            "type": "number"
-          },
-          "personIds": {
-            "description": "Filter by person IDs",
-            "items": {
-              "format": "uuid",
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "query": {
-            "description": "Natural language search query",
-            "type": "string"
-          },
-          "queryAssetId": {
-            "description": "Asset ID to use as search reference",
-            "format": "uuid",
-            "type": "string"
-          },
-          "rating": {
-            "description": "Filter by rating [1-5], or null for unrated",
-            "maximum": 5,
-            "minimum": -1,
-            "nullable": true,
-            "type": "number",
-            "x-immich-history": [
-              {
-                "version": "v1",
-                "state": "Added"
-              },
-              {
-                "version": "v2",
-                "state": "Stable"
-              },
-              {
-                "version": "v2.6.0",
-                "state": "Updated",
-                "description": "Using -1 as a rating is deprecated and will be removed in the next major version."
-              }
-            ],
-            "x-immich-state": "Stable"
-          },
-          "size": {
-            "description": "Number of results to return",
-            "maximum": 1000,
-            "minimum": 1,
-            "type": "number"
-          },
-          "state": {
-            "description": "Filter by state/province name",
-            "nullable": true,
-            "type": "string"
-          },
-          "tagIds": {
-            "description": "Filter by tag IDs",
-            "items": {
-              "format": "uuid",
-              "type": "string"
-            },
-            "nullable": true,
-            "type": "array"
-          },
-          "takenAfter": {
-            "description": "Filter by taken date (after)",
-            "format": "date-time",
-            "type": "string"
-          },
-          "takenBefore": {
-            "description": "Filter by taken date (before)",
-            "format": "date-time",
-            "type": "string"
-          },
-          "trashedAfter": {
-            "description": "Filter by trash date (after)",
-            "format": "date-time",
-            "type": "string"
-          },
-          "trashedBefore": {
-            "description": "Filter by trash date (before)",
-            "format": "date-time",
-            "type": "string"
-          },
-          "type": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/AssetTypeEnum"
-              }
-            ],
-            "description": "Asset type filter"
-          },
-          "updatedAfter": {
-            "description": "Filter by update date (after)",
-            "format": "date-time",
-            "type": "string"
-          },
-          "updatedBefore": {
-            "description": "Filter by update date (before)",
-            "format": "date-time",
-            "type": "string"
-          },
-          "visibility": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/AssetVisibility"
-              }
-            ],
-            "description": "Filter by visibility"
-          },
-          "withDeleted": {
-            "description": "Include deleted assets",
-            "type": "boolean"
-          },
-          "withExif": {
-            "description": "Include EXIF data in response",
-            "type": "boolean"
-          }
-        },
         "type": "object"
       },
       "SourceType": {
@@ -25994,251 +23660,27 @@
         ],
         "type": "string"
       },
-      "WorkflowActionItemDto": {
+      "ViewFolderContentResponseDto": {
         "properties": {
-          "actionConfig": {
-            "description": "Action configuration",
-            "type": "object"
-          },
-          "pluginActionId": {
-            "description": "Plugin action ID",
-            "format": "uuid",
-            "type": "string"
-          }
-        },
-        "required": [
-          "pluginActionId"
-        ],
-        "type": "object"
-      },
-      "WorkflowActionResponseDto": {
-        "properties": {
-          "actionConfig": {
-            "description": "Action configuration",
-            "nullable": true,
-            "type": "object"
-          },
-          "id": {
-            "description": "Action ID",
-            "type": "string"
-          },
-          "order": {
-            "description": "Action order",
-            "type": "number"
-          },
-          "pluginActionId": {
-            "description": "Plugin action ID",
-            "type": "string"
-          },
-          "workflowId": {
-            "description": "Workflow ID",
-            "type": "string"
-          }
-        },
-        "required": [
-          "actionConfig",
-          "id",
-          "order",
-          "pluginActionId",
-          "workflowId"
-        ],
-        "type": "object"
-      },
-      "WorkflowCreateDto": {
-        "properties": {
-          "actions": {
-            "description": "Workflow actions",
+          "folders": {
+            "description": "Immediate child folder paths",
             "items": {
-              "$ref": "#/components/schemas/WorkflowActionItemDto"
+              "type": "string"
             },
             "type": "array"
           },
-          "description": {
-            "description": "Workflow description",
-            "type": "string"
-          },
-          "enabled": {
-            "description": "Workflow enabled",
-            "type": "boolean"
-          },
-          "filters": {
-            "description": "Workflow filters",
+          "items": {
+            "description": "Assets in the current folder",
             "items": {
-              "$ref": "#/components/schemas/WorkflowFilterItemDto"
+              "$ref": "#/components/schemas/AssetResponseDto"
             },
             "type": "array"
-          },
-          "name": {
-            "description": "Workflow name",
-            "type": "string"
-          },
-          "triggerType": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PluginTriggerType"
-              }
-            ],
-            "description": "Workflow trigger type"
           }
         },
         "required": [
-          "actions",
-          "filters",
-          "name",
-          "triggerType"
+          "folders",
+          "items"
         ],
-        "type": "object"
-      },
-      "WorkflowFilterItemDto": {
-        "properties": {
-          "filterConfig": {
-            "description": "Filter configuration",
-            "type": "object"
-          },
-          "pluginFilterId": {
-            "description": "Plugin filter ID",
-            "format": "uuid",
-            "type": "string"
-          }
-        },
-        "required": [
-          "pluginFilterId"
-        ],
-        "type": "object"
-      },
-      "WorkflowFilterResponseDto": {
-        "properties": {
-          "filterConfig": {
-            "description": "Filter configuration",
-            "nullable": true,
-            "type": "object"
-          },
-          "id": {
-            "description": "Filter ID",
-            "type": "string"
-          },
-          "order": {
-            "description": "Filter order",
-            "type": "number"
-          },
-          "pluginFilterId": {
-            "description": "Plugin filter ID",
-            "type": "string"
-          },
-          "workflowId": {
-            "description": "Workflow ID",
-            "type": "string"
-          }
-        },
-        "required": [
-          "filterConfig",
-          "id",
-          "order",
-          "pluginFilterId",
-          "workflowId"
-        ],
-        "type": "object"
-      },
-      "WorkflowResponseDto": {
-        "properties": {
-          "actions": {
-            "description": "Workflow actions",
-            "items": {
-              "$ref": "#/components/schemas/WorkflowActionResponseDto"
-            },
-            "type": "array"
-          },
-          "createdAt": {
-            "description": "Creation date",
-            "type": "string"
-          },
-          "description": {
-            "description": "Workflow description",
-            "type": "string"
-          },
-          "enabled": {
-            "description": "Workflow enabled",
-            "type": "boolean"
-          },
-          "filters": {
-            "description": "Workflow filters",
-            "items": {
-              "$ref": "#/components/schemas/WorkflowFilterResponseDto"
-            },
-            "type": "array"
-          },
-          "id": {
-            "description": "Workflow ID",
-            "type": "string"
-          },
-          "name": {
-            "description": "Workflow name",
-            "nullable": true,
-            "type": "string"
-          },
-          "ownerId": {
-            "description": "Owner user ID",
-            "type": "string"
-          },
-          "triggerType": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PluginTriggerType"
-              }
-            ],
-            "description": "Workflow trigger type"
-          }
-        },
-        "required": [
-          "actions",
-          "createdAt",
-          "description",
-          "enabled",
-          "filters",
-          "id",
-          "name",
-          "ownerId",
-          "triggerType"
-        ],
-        "type": "object"
-      },
-      "WorkflowUpdateDto": {
-        "properties": {
-          "actions": {
-            "description": "Workflow actions",
-            "items": {
-              "$ref": "#/components/schemas/WorkflowActionItemDto"
-            },
-            "type": "array"
-          },
-          "description": {
-            "description": "Workflow description",
-            "type": "string"
-          },
-          "enabled": {
-            "description": "Workflow enabled",
-            "type": "boolean"
-          },
-          "filters": {
-            "description": "Workflow filters",
-            "items": {
-              "$ref": "#/components/schemas/WorkflowFilterItemDto"
-            },
-            "type": "array"
-          },
-          "name": {
-            "description": "Workflow name",
-            "type": "string"
-          },
-          "triggerType": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PluginTriggerType"
-              }
-            ],
-            "description": "Workflow trigger type"
-          }
-        },
         "type": "object"
       }
     }

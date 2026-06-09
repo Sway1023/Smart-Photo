@@ -58,6 +58,13 @@ export enum AssetOrder {
   Desc = 'desc',
 }
 
+export enum CategoryType {
+  Pictures = 'PICTURES',
+  Animation = 'ANIMATION',
+  LivePhoto = 'LIVE_PHOTO',
+  Video = 'VIDEO',
+}
+
 export enum DatabaseAction {
   Create = 'CREATE',
   Update = 'UPDATE',
@@ -139,14 +146,6 @@ export enum Permission {
   BackupUpload = 'backup.upload',
   BackupDelete = 'backup.delete',
 
-  DuplicateRead = 'duplicate.read',
-  DuplicateDelete = 'duplicate.delete',
-
-  FaceCreate = 'face.create',
-  FaceRead = 'face.read',
-  FaceUpdate = 'face.update',
-  FaceDelete = 'face.delete',
-
   FolderRead = 'folder.read',
 
   JobCreate = 'job.create',
@@ -185,22 +184,9 @@ export enum Permission {
   PartnerUpdate = 'partner.update',
   PartnerDelete = 'partner.delete',
 
-  PersonCreate = 'person.create',
-  PersonRead = 'person.read',
-  PersonUpdate = 'person.update',
-  PersonDelete = 'person.delete',
-  PersonStatistics = 'person.statistics',
-  PersonMerge = 'person.merge',
-  PersonReassign = 'person.reassign',
-
   PinCodeCreate = 'pinCode.create',
   PinCodeUpdate = 'pinCode.update',
   PinCodeDelete = 'pinCode.delete',
-
-  PluginCreate = 'plugin.create',
-  PluginRead = 'plugin.read',
-  PluginUpdate = 'plugin.update',
-  PluginDelete = 'plugin.delete',
 
   ServerAbout = 'server.about',
   ServerApkLinks = 'server.apkLinks',
@@ -273,11 +259,6 @@ export enum Permission {
   QueueJobUpdate = 'queueJob.update',
   QueueJobDelete = 'queueJob.delete',
 
-  WorkflowCreate = 'workflow.create',
-  WorkflowRead = 'workflow.read',
-  WorkflowUpdate = 'workflow.update',
-  WorkflowDelete = 'workflow.delete',
-
   AdminUserCreate = 'adminUser.create',
   AdminUserRead = 'adminUser.read',
   AdminUserUpdate = 'adminUser.update',
@@ -310,7 +291,6 @@ export enum StorageFolder {
 export enum SystemMetadataKey {
   MediaLocation = 'MediaLocation',
   ReverseGeocodingState = 'reverse-geocoding-state',
-  FacialRecognitionState = 'facial-recognition-state',
   MemoriesState = 'memories-state',
   AdminOnboarding = 'admin-onboarding',
   MaintenanceMode = 'maintenance-mode',
@@ -355,14 +335,7 @@ export enum AssetStatus {
   Deleted = 'deleted',
 }
 
-export enum SourceType {
-  MachineLearning = 'machine-learning',
-  Exif = 'exif',
-  Manual = 'manual',
-}
-
 export enum ManualJobName {
-  PersonCleanup = 'person-cleanup',
   TagCleanup = 'tag-cleanup',
   UserCleanup = 'user-cleanup',
   MemoryCleanup = 'memory-cleanup',
@@ -375,15 +348,11 @@ export enum AssetPathType {
   EncodedVideo = 'encoded_video',
 }
 
-export enum PersonPathType {
-  Face = 'face',
-}
-
 export enum UserPathType {
   Profile = 'profile',
 }
 
-export type PathType = AssetFileType | AssetPathType | PersonPathType | UserPathType;
+export type PathType = AssetFileType | AssetPathType | UserPathType;
 
 export enum TranscodePolicy {
   All = 'all',
@@ -555,10 +524,6 @@ export enum QueueName {
   ThumbnailGeneration = 'thumbnailGeneration',
   MetadataExtraction = 'metadataExtraction',
   VideoConversion = 'videoConversion',
-  FaceDetection = 'faceDetection',
-  FacialRecognition = 'facialRecognition',
-  SmartSearch = 'smartSearch',
-  DuplicateDetection = 'duplicateDetection',
   BackgroundTask = 'backgroundTask',
   StorageTemplateMigration = 'storageTemplateMigration',
   Migration = 'migration',
@@ -567,8 +532,6 @@ export enum QueueName {
   Library = 'library',
   Notification = 'notifications',
   BackupDatabase = 'backupDatabase',
-  Ocr = 'ocr',
-  Workflow = 'workflow',
   Editor = 'editor',
 }
 
@@ -584,10 +547,6 @@ export enum QueueJobStatus {
 export enum JobName {
   AssetDelete = 'AssetDelete',
   AssetDeleteCheck = 'AssetDeleteCheck',
-  AssetDetectFacesQueueAll = 'AssetDetectFacesQueueAll',
-  AssetDetectFaces = 'AssetDetectFaces',
-  AssetDetectDuplicatesQueueAll = 'AssetDetectDuplicatesQueueAll',
-  AssetDetectDuplicates = 'AssetDetectDuplicates',
   AssetEditThumbnailGeneration = 'AssetEditThumbnailGeneration',
   AssetEncodeVideoQueueAll = 'AssetEncodeVideoQueueAll',
   AssetEncodeVideo = 'AssetEncodeVideo',
@@ -602,9 +561,6 @@ export enum JobName {
   AuditTableCleanup = 'AuditTableCleanup',
 
   DatabaseBackup = 'DatabaseBackup',
-
-  FacialRecognitionQueueAll = 'FacialRecognitionQueueAll',
-  FacialRecognition = 'FacialRecognition',
 
   FileDelete = 'FileDelete',
   FileMigrationQueueAll = 'FileMigrationQueueAll',
@@ -631,10 +587,6 @@ export enum JobName {
   UserDeleteCheck = 'UserDeleteCheck',
   UserSyncUsage = 'UserSyncUsage',
 
-  PersonCleanup = 'PersonCleanup',
-  PersonFileMigration = 'PersonFileMigration',
-  PersonGenerateThumbnail = 'PersonGenerateThumbnail',
-
   SessionCleanup = 'SessionCleanup',
 
   SendMail = 'SendMail',
@@ -643,9 +595,6 @@ export enum JobName {
   SidecarCheck = 'SidecarCheck',
   SidecarWrite = 'SidecarWrite',
 
-  SmartSearchQueueAll = 'SmartSearchQueueAll',
-  SmartSearch = 'SmartSearch',
-
   StorageTemplateMigration = 'StorageTemplateMigration',
   StorageTemplateMigrationSingle = 'StorageTemplateMigrationSingle',
 
@@ -653,12 +602,6 @@ export enum JobName {
 
   VersionCheck = 'VersionCheck',
 
-  // OCR
-  OcrQueueAll = 'OcrQueueAll',
-  Ocr = 'Ocr',
-
-  // Workflow
-  WorkflowRun = 'WorkflowRun',
 }
 
 export enum QueueCommand {
@@ -681,11 +624,6 @@ export enum JobStatus {
 
 export enum QueueCleanType {
   Failed = 'failed',
-}
-
-export enum VectorIndex {
-  Clip = 'clip_index',
-  Face = 'face_index',
 }
 
 export enum DatabaseLock {
@@ -734,9 +672,6 @@ export enum SyncRequestType {
   PartnerStacksV1 = 'PartnerStacksV1',
   StacksV1 = 'StacksV1',
   UsersV1 = 'UsersV1',
-  PeopleV1 = 'PeopleV1',
-  AssetFacesV1 = 'AssetFacesV1',
-  AssetFacesV2 = 'AssetFacesV2',
   UserMetadataV1 = 'UserMetadataV1',
 }
 
@@ -793,13 +728,6 @@ export enum SyncEntityType {
   StackV1 = 'StackV1',
   StackDeleteV1 = 'StackDeleteV1',
 
-  PersonV1 = 'PersonV1',
-  PersonDeleteV1 = 'PersonDeleteV1',
-
-  AssetFaceV1 = 'AssetFaceV1',
-  AssetFaceV2 = 'AssetFaceV2',
-  AssetFaceDeleteV1 = 'AssetFaceDeleteV1',
-
   UserMetadataV1 = 'UserMetadataV1',
   UserMetadataDeleteV1 = 'UserMetadataDeleteV1',
 
@@ -855,8 +783,6 @@ export enum ApiTag {
   DatabaseBackups = 'Database Backups (admin)',
   Deprecated = 'Deprecated',
   Download = 'Download',
-  Duplicates = 'Duplicates',
-  Faces = 'Faces',
   Jobs = 'Jobs',
   Libraries = 'Libraries',
   Maintenance = 'Maintenance (admin)',
@@ -865,8 +791,6 @@ export enum ApiTag {
   Notifications = 'Notifications',
   NotificationsAdmin = 'Notifications (admin)',
   Partners = 'Partners',
-  People = 'People',
-  Plugins = 'Plugins',
   Queues = 'Queues',
   Search = 'Search',
   Server = 'Server',
@@ -882,16 +806,4 @@ export enum ApiTag {
   UsersAdmin = 'Users (admin)',
   Users = 'Users',
   Views = 'Views',
-  Workflows = 'Workflows',
-}
-
-export enum PluginContext {
-  Asset = 'asset',
-  Album = 'album',
-  Person = 'person',
-}
-
-export enum PluginTriggerType {
-  AssetCreate = 'AssetCreate',
-  PersonRecognized = 'PersonRecognized',
 }

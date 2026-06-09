@@ -8,9 +8,18 @@
     src?: string;
     title?: string;
     class?: string;
+    imgWidth?: number;
   }
 
-  let { onClick = undefined, text, fullWidth = false, src = empty1Url, title, class: className }: Props = $props();
+  let {
+    onClick = undefined,
+    text,
+    fullWidth = false,
+    src = empty1Url,
+    title,
+    class: className,
+    imgWidth = 500,
+  }: Props = $props();
 
   let width = $derived(fullWidth ? 'w-full' : 'w-1/2');
 
@@ -25,7 +34,7 @@
   onclick={onClick}
   class="{width} {className} flex flex-col place-content-center place-items-center rounded-3xl bg-gray-50 p-5 dark:bg-immich-dark-gray {hoverClasses}"
 >
-  <img {src} alt="" width="500" draggable="false" />
+  <img {src} alt="" width={imgWidth} draggable="false" />
 
   {#if title}
     <h2 class="text-xl font-medium my-4">{title}</h2>

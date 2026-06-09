@@ -71,12 +71,14 @@ services:
     restart: unless-stopped
     volumes:
       - ${UPLOAD_LOCATION}/photos:/data
+      - ${EXTERNAL_LIBRARY_LOCATION:-./import}:/external
       - /etc/localtime:/etc/localtime:ro
       - pnpm_store_server:/buildcache/pnpm-store
-      - ../plugins:/build/corePlugin
     env_file:
       - .env
     environment:
+      IMMICH_EXTERNAL_LIBRARY_ROOT: /external
+      IMMICH_HOST: 0.0.0.0
       IMMICH_REPOSITORY: immich-app/immich
       IMMICH_REPOSITORY_URL: https://github.com/immich-app/immich
       IMMICH_SOURCE_REF: local
@@ -118,7 +120,7 @@ services:
     env_file:
       - .env
     ports:
-      - 3000:3000
+      - 8081:3000
       - 24678:24678
     volumes:
       - pnpm_store_web:/buildcache/pnpm-store
@@ -128,30 +130,6 @@ services:
         condition: service_healthy
       immich-server:
         condition: service_started
-
-  immich-machine-learning:
-    container_name: immich_machine_learning
-    image: immich-machine-learning-dev:latest
-    # extends:
-    #   file: hwaccel.ml.yml
-    #   service: cpu # set to one of [armnn, cuda, rocm, openvino, openvino-wsl, rknn] for accelerated inference
-    build:
-      context: ../machine-learning
-      dockerfile: Dockerfile
-      args:
-        - DEVICE=cpu # set to one of [armnn, cuda, rocm, openvino, openvino-wsl, rknn] for accelerated inference
-    ports:
-      - 3003:3003
-    volumes:
-      - ../machine-learning/immich_ml:/usr/src/immich_ml
-      - model_cache:/cache
-    env_file:
-      - .env
-    depends_on:
-      - database
-    restart: unless-stopped
-    healthcheck:
-      disable: false
 
   redis:
     container_name: immich_redis
@@ -198,7 +176,6 @@ services:
   #     - grafana_data:/var/lib/grafana
 
 volumes:
-  model_cache:
   prometheus_data:
   grafana_data:
   pnpm_cache:

@@ -51,7 +51,7 @@
       return;
     }
 
-    return { availableVersion, releaseUrl: `https://github.com/immich-app/immich/releases/tag/${availableVersion}` };
+    return { availableVersion };
   };
 
   const releaseInfo = $derived(getReleaseInfo(releaseManager.value));
@@ -92,11 +92,8 @@
 </div>
 
 {#if releaseInfo}
-  <a
-    href={releaseInfo.releaseUrl}
-    target="_blank"
-    rel="noopener noreferrer"
-    class="mt-3 p-2.5 ms-4 rounded-lg text-sm min-w-52 border border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 hover:border-immich-primary/40 dark:hover:border-immich-dark-primary/40 hover:bg-immich-primary/5 dark:hover:bg-immich-dark-primary/5 transition-all duration-200 group block"
+  <div
+    class="mt-3 p-2.5 ms-4 rounded-lg text-sm min-w-52 border border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 block"
   >
     <div class="flex items-center justify-between gap-2">
       <div class="flex items-center gap-2">
@@ -105,11 +102,9 @@
           {releaseInfo.availableVersion}
         </Text>
       </div>
-      <span
-        class="text-[11px] text-gray-500 dark:text-gray-400 group-hover:text-immich-primary dark:group-hover:text-immich-dark-primary transition-colors opacity-70 group-hover:opacity-100"
-      >
+      <span class="text-[11px] text-gray-500 dark:text-gray-400 opacity-70">
         {$t('new_update')}!
       </span>
     </div>
-  </a>
+  </div>
 {/if}

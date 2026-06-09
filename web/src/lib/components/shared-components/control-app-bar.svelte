@@ -57,7 +57,7 @@
   });
 </script>
 
-<div in:fly={{ y: 10, duration: 200 }} class="absolute top-0 w-full bg-transparent">
+<div in:fly={{ y: 10, duration: 200 }} class="absolute top-0 z-[100] w-full bg-transparent">
   <nav
     id="asset-selection-app-bar"
     class={[

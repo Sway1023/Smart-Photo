@@ -64,3 +64,17 @@ preferWorkspacePackages: true
 injectWorkspacePackages: true
 shamefullyHoist: false
 verifyDepsBeforeRun: install
+allowBuilds:
+  '@nestjs/core': true
+  '@parcel/watcher': true
+  '@scarf/scarf': true
+  '@swc/core': true
+  bcrypt: true
+  canvas: true
+  cpu-features: true
+  es5-ext: true
+  esbuild: true
+  msgpackr-extract: true
+  protobufjs: true
+  sharp: true
+  ssh2: true

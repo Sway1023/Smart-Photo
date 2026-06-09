@@ -1,6 +1,3 @@
-import { assetCacheManager } from '$lib/managers/AssetCacheManager.svelte';
-import { CancellableTask } from '$lib/utils/cancellable-task';
-
 export type OcrBoundingBox = {
   id: string;
   assetId: string;
@@ -21,8 +18,6 @@ class OcrManager {
   #data = $state<OcrBoundingBox[]>([]);
   showOverlay = $state(false);
   #hasOcrData = $derived(this.#data.length > 0);
-  #ocrLoader = new CancellableTask();
-  #cleared = false;
 
   get data() {
     return this.#data;
@@ -32,24 +27,17 @@ class OcrManager {
     return this.#hasOcrData;
   }
 
-  async getAssetOcr(id: string) {
-    if (this.#cleared) {
-      await this.#ocrLoader.reset();
-      this.#cleared = false;
-    }
-    await this.#ocrLoader.execute(async () => {
-      this.#data = await assetCacheManager.getAssetOcr(id);
-    }, false);
+  async getAssetOcr(_id?: string) {
+    this.clear();
   }
 
   clear() {
-    this.#cleared = true;
     this.#data = [];
     this.showOverlay = false;
   }
 
   toggleOcrBoundingBox() {
-    this.showOverlay = !this.showOverlay;
+    this.showOverlay = false;
   }
 }
 

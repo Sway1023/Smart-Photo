@@ -5,7 +5,6 @@ import { eventManager } from '$lib/managers/event-manager.svelte';
 import AssetAddToAlbumModal from '$lib/modals/AssetAddToAlbumModal.svelte';
 import AssetTagModal from '$lib/modals/AssetTagModal.svelte';
 import SharedLinkCreateModal from '$lib/modals/SharedLinkCreateModal.svelte';
-import { isFaceEditMode } from '$lib/stores/face-edit.svelte';
 import { user as authUser, preferences } from '$lib/stores/user.store';
 import type { AssetControlContext } from '$lib/types';
 import { getSharedLink, sleep } from '$lib/utils';
@@ -32,8 +31,6 @@ import {
   mdiDatabaseRefreshOutline,
   mdiDownload,
   mdiDownloadBox,
-  mdiFaceRecognition,
-  mdiHeadSyncOutline,
   mdiHeart,
   mdiHeartOutline,
   mdiImageRefreshOutline,
@@ -67,12 +64,6 @@ export const getAssetBulkActions = ($t: MessageFormatter, ctx: AssetControlConte
     onAction: () => modalManager.show(AssetAddToAlbumModal, { assetIds }),
   };
 
-  const RefreshFacesJob: ActionItem = {
-    title: $t('refresh_faces'),
-    icon: mdiHeadSyncOutline,
-    onAction: () => onAction(AssetJobName.RefreshFaces),
-  };
-
   const RefreshMetadataJob: ActionItem = {
     title: $t('refresh_metadata'),
     icon: mdiDatabaseRefreshOutline,
@@ -92,7 +83,7 @@ export const getAssetBulkActions = ($t: MessageFormatter, ctx: AssetControlConte
     $if: () => isAllVideos,
   };
 
-  return { AddToAlbum, RefreshFacesJob, RefreshMetadataJob, RegenerateThumbnailJob, TranscodeVideoJob };
+  return { AddToAlbum, RefreshMetadataJob, RegenerateThumbnailJob, TranscodeVideoJob };
 };
 
 export const getAssetActions = ($t: MessageFormatter, asset: AssetResponseDto) => {
@@ -225,17 +216,6 @@ export const getAssetActions = ($t: MessageFormatter, asset: AssetResponseDto) =
     shortcuts: { key: 't' },
   };
 
-  const TagPeople: ActionItem = {
-    title: $t('tag_people'),
-    icon: mdiFaceRecognition,
-    type: $t('assets'),
-    $if: () => isOwner && asset.type === AssetTypeEnum.Image && !asset.isTrashed,
-    onAction: () => {
-      isFaceEditMode.value = !isFaceEditMode.value;
-    },
-    shortcuts: { key: 'p' },
-  };
-
   const Edit: ActionItem = {
     title: $t('editor'),
     icon: mdiTune,
@@ -249,12 +229,6 @@ export const getAssetActions = ($t: MessageFormatter, asset: AssetResponseDto) =
       !asset.originalPath.toLowerCase().endsWith('.gif') &&
       !asset.originalPath.toLowerCase().endsWith('.svg'),
     onAction: () => assetViewerManager.openEditor(),
-  };
-
-  const RefreshFacesJob: ActionItem = {
-    title: $t('refresh_faces'),
-    icon: mdiHeadSyncOutline,
-    onAction: () => handleRunAssetJob({ name: AssetJobName.RefreshFaces, assetIds: [asset.id] }),
   };
 
   const RefreshMetadataJob: ActionItem = {
@@ -292,9 +266,7 @@ export const getAssetActions = ($t: MessageFormatter, asset: AssetResponseDto) =
     ZoomOut,
     Copy,
     Tag,
-    TagPeople,
     Edit,
-    RefreshFacesJob,
     RefreshMetadataJob,
     RegenerateThumbnailJob,
     TranscodeVideoJob,
@@ -372,14 +344,13 @@ const handleUnfavorite = async (asset: AssetResponseDto) => {
 };
 
 const getAssetJobMessage = ($t: MessageFormatter, job: AssetJobName) => {
-  const messages: Record<AssetJobName, string> = {
-    [AssetJobName.RefreshFaces]: $t('refreshing_faces'),
+  const messages: Partial<Record<AssetJobName, string>> = {
     [AssetJobName.RefreshMetadata]: $t('refreshing_metadata'),
     [AssetJobName.RegenerateThumbnail]: $t('regenerating_thumbnails'),
     [AssetJobName.TranscodeVideo]: $t('refreshing_encoded_video'),
   };
 
-  return messages[job];
+  return messages[job] ?? $t('admin.job_created');
 };
 
 const handleRunAssetJob = async (dto: AssetJobsDto) => {

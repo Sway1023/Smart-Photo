@@ -12,8 +12,6 @@
   import FavoriteAction from '$lib/components/timeline/actions/FavoriteAction.svelte';
   import LinkLivePhotoAction from '$lib/components/timeline/actions/LinkLivePhotoAction.svelte';
   import SelectAllAssets from '$lib/components/timeline/actions/SelectAllAction.svelte';
-  import SetVisibilityAction from '$lib/components/timeline/actions/SetVisibilityAction.svelte';
-  import StackAction from '$lib/components/timeline/actions/StackAction.svelte';
   import TagAction from '$lib/components/timeline/actions/TagAction.svelte';
   import AssetSelectControlBar from '$lib/components/timeline/AssetSelectControlBar.svelte';
   import Timeline from '$lib/components/timeline/Timeline.svelte';
@@ -24,8 +22,6 @@
   import { mapSettings } from '$lib/stores/preferences.store';
   import { preferences, user } from '$lib/stores/user.store';
   import {
-    updateStackedAssetInTimeline,
-    updateUnstackedAssetInTimeline,
     type OnLink,
     type OnUnlink,
   } from '$lib/utils/actions';
@@ -47,7 +43,6 @@
   const assetInteraction = new AssetInteraction();
   let timelineManager = $state<TimelineManager>() as TimelineManager;
   let selectedAssets = $derived(assetInteraction.selectedAssets);
-  let isAssetStackSelected = $derived(selectedAssets.length === 1 && !!selectedAssets[0].stack);
   let isLinkActionAvailable = $derived.by(() => {
     const isLivePhoto = selectedAssets.length === 1 && !!selectedAssets[0].livePhotoVideoId;
     const isLivePhotoCandidate =
@@ -66,11 +61,6 @@
   const handleUnlink: OnUnlink = ({ still, motion }) => {
     timelineManager.upsertAssets([motion]);
     timelineManager.upsertAssets([still]);
-  };
-
-  const handleSetVisibility = (assetIds: string[]) => {
-    timelineManager.removeAssets(assetIds);
-    assetInteraction.clearMultiselect();
   };
 
   const handleEscape = () => {
@@ -140,13 +130,6 @@
 
         <ButtonContextMenu icon={mdiDotsVertical} title={$t('menu')}>
           <DownloadAction menuItem />
-          {#if assetInteraction.selectedAssets.length > 1 || isAssetStackSelected}
-            <StackAction
-              unstack={isAssetStackSelected}
-              onStack={(result) => updateStackedAssetInTimeline(timelineManager, result)}
-              onUnstack={(assets) => updateUnstackedAssetInTimeline(timelineManager, assets)}
-            />
-          {/if}
           {#if isLinkActionAvailable}
             <LinkLivePhotoAction
               menuItem
@@ -171,7 +154,6 @@
             onAssetDelete={(assetIds) => timelineManager.removeAssets(assetIds)}
             onUndoDelete={(assets) => timelineManager.upsertAssets(assets)}
           />
-          <SetVisibilityAction menuItem onVisibilitySet={handleSetVisibility} />
           <hr />
           <ActionMenuItem action={Actions.RegenerateThumbnailJob} />
           <ActionMenuItem action={Actions.RefreshMetadataJob} />

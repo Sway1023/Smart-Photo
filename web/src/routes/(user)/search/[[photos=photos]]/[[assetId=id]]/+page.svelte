@@ -5,6 +5,7 @@
   import OnEvents from '$lib/components/OnEvents.svelte';
   import ButtonContextMenu from '$lib/components/shared-components/context-menu/button-context-menu.svelte';
   import ControlAppBar from '$lib/components/shared-components/control-app-bar.svelte';
+  import UserPageLayout from '$lib/components/layouts/user-page-layout.svelte';
   import GalleryViewer from '$lib/components/shared-components/gallery-viewer/gallery-viewer.svelte';
   import SearchBar from '$lib/components/shared-components/search-bar/search-bar.svelte';
   import ArchiveAction from '$lib/components/timeline/actions/ArchiveAction.svelte';
@@ -15,11 +16,9 @@
   import DeleteAssets from '$lib/components/timeline/actions/DeleteAssetsAction.svelte';
   import DownloadAction from '$lib/components/timeline/actions/DownloadAction.svelte';
   import FavoriteAction from '$lib/components/timeline/actions/FavoriteAction.svelte';
-  import SetVisibilityAction from '$lib/components/timeline/actions/SetVisibilityAction.svelte';
   import TagAction from '$lib/components/timeline/actions/TagAction.svelte';
   import AssetSelectControlBar from '$lib/components/timeline/AssetSelectControlBar.svelte';
   import { QueryParameter } from '$lib/constants';
-  import { featureFlagsManager } from '$lib/managers/feature-flags-manager.svelte';
   import type { Viewport } from '$lib/managers/timeline-manager/types';
   import { Route } from '$lib/route';
   import { getAssetBulkActions } from '$lib/services/asset.service';
@@ -30,17 +29,14 @@
   import { cancelMultiselect } from '$lib/utils/asset-utils';
   import { parseUtcDate } from '$lib/utils/date-time';
   import { handleError } from '$lib/utils/handle-error';
-  import { isAlbumsRoute, isPeopleRoute } from '$lib/utils/navigation';
+  import { isAlbumsRoute } from '$lib/utils/navigation';
   import { toTimelineAsset } from '$lib/utils/timeline-util';
   import {
     type AlbumResponseDto,
     type AssetResponseDto,
-    getPerson,
     getTagById,
     type MetadataSearchDto,
     searchAssets,
-    searchSmart,
-    type SmartSearchDto,
   } from '@immich/sdk';
   import { ActionButton, CommandPaletteDefaultProvider, Icon, IconButton, LoadingSpinner } from '@immich/ui';
   import { mdiArrowLeft, mdiDotsVertical, mdiImageOffOutline, mdiSelectAll } from '@mdi/js';
@@ -64,9 +60,8 @@
 
   const assetInteraction = new AssetInteraction();
 
-  type SearchTerms = MetadataSearchDto & Pick<SmartSearchDto, 'query' | 'queryAssetId'>;
+  type SearchTerms = MetadataSearchDto;
   let searchQuery = $derived(page.url.searchParams.get(QueryParameter.QUERY));
-  let smartSearchEnabled = $derived(featureFlagsManager.value.smartSearch);
   let terms = $derived<SearchTerms>(searchQuery ? JSON.parse(searchQuery) : {});
 
   $effect(() => {
@@ -89,10 +84,6 @@
     }
     const route = from?.route?.id;
 
-    if (isPeopleRoute(route)) {
-      previousRoute = Route.photos();
-    }
-
     if (isAlbumsRoute(route)) {
       previousRoute = Route.explore();
     }
@@ -109,11 +100,6 @@
   const onAssetDelete = (assetIds: string[]) => {
     const assetIdSet = new Set(assetIds);
     searchResultAssets = searchResultAssets.filter((asset: AssetResponseDto) => !assetIdSet.has(asset.id));
-  };
-
-  const handleSetVisibility = (assetIds: string[]) => {
-    assetInteraction.clearMultiselect();
-    onAssetDelete(assetIds);
   };
 
   const handleSelectAll = () => {
@@ -141,10 +127,7 @@
     };
 
     try {
-      const { albums, assets } =
-        ('query' in searchDto || 'queryAssetId' in searchDto) && smartSearchEnabled
-          ? await searchSmart({ smartSearchDto: { ...searchDto, language: $lang } })
-          : await searchAssets({ metadataSearchDto: searchDto });
+      const { albums, assets } = await searchAssets({ metadataSearchDto: searchDto });
 
       searchResultAlbums.push(...albums.items);
       searchResultAssets.push(...assets.items);
@@ -177,37 +160,17 @@
       isFavorite: $t('favorite'),
       isNotInAlbum: $t('not_in_any_album'),
       type: $t('media_type'),
-      query: $t('context'),
       city: $t('city'),
       country: $t('country'),
       state: $t('state'),
       make: $t('camera_brand'),
       model: $t('camera_model'),
       lensModel: $t('lens_model'),
-      personIds: $t('people'),
       tagIds: $t('tags'),
       originalFileName: $t('file_name_text'),
       description: $t('description'),
-      queryAssetId: $t('query_asset_id'),
-      ocr: $t('ocr'),
     };
     return keyMap[key] || key;
-  }
-
-  async function getPersonName(personIds: string[]) {
-    const personNames = await Promise.all(
-      personIds.map(async (personId) => {
-        const person = await getPerson({ id: personId });
-
-        if (person.name == '') {
-          return $t('no_name');
-        }
-
-        return person.name;
-      }),
-    );
-
-    return personNames.join(', ');
   }
 
   async function getTagNames(tagIds: string[] | null) {
@@ -243,10 +206,77 @@
 
 <OnEvents {onAlbumAddAssets} />
 
+<UserPageLayout hideNavbar showTopBar scrollbar={false}>
+  {#snippet topbar()}
+    {#if assetInteraction.selectionActive}
+      <AssetSelectControlBar
+        assets={assetInteraction.selectedAssets}
+        clearSelect={() => cancelMultiselect(assetInteraction)}
+      >
+        {@const Actions = getAssetBulkActions($t, assetInteraction.asControlContext())}
+        <CommandPaletteDefaultProvider name={$t('assets')} actions={Object.values(Actions)} />
+
+        <CreateSharedLink />
+        <IconButton
+          shape="round"
+          color="secondary"
+          variant="ghost"
+          aria-label={$t('select_all')}
+          icon={mdiSelectAll}
+          onclick={handleSelectAll}
+        />
+        <ActionButton action={Actions.AddToAlbum} />
+        {#if assetInteraction.isAllUserOwned}
+          <FavoriteAction
+            removeFavorite={assetInteraction.isAllFavorite}
+            onFavorite={(ids, isFavorite) => {
+              for (const id of ids) {
+                const asset = searchResultAssets.find((asset) => asset.id === id);
+                if (asset) {
+                  asset.isFavorite = isFavorite;
+                }
+              }
+            }}
+          />
+
+          <ButtonContextMenu icon={mdiDotsVertical} title={$t('menu')}>
+            <ActionMenuItem action={Actions.AddToAlbum} />
+            <DownloadAction menuItem />
+            <ChangeDate menuItem />
+            <ChangeDescription menuItem />
+            <ChangeLocation menuItem />
+            <ArchiveAction menuItem unarchive={assetInteraction.isAllArchived} />
+            {#if $preferences.tags.enabled}
+              <TagAction menuItem />
+            {/if}
+            <DeleteAssets menuItem {onAssetDelete} onUndoDelete={onSearchQueryUpdate} />
+            <hr />
+            <ActionMenuItem action={Actions.RegenerateThumbnailJob} />
+            <ActionMenuItem action={Actions.RefreshMetadataJob} />
+            <ActionMenuItem action={Actions.TranscodeVideoJob} />
+          </ButtonContextMenu>
+        {:else}
+          <DownloadAction />
+        {/if}
+      </AssetSelectControlBar>
+    {:else}
+      <ControlAppBar onClose={() => goto(previousRoute)} backIcon={mdiArrowLeft}>
+        <div class="absolute bg-light"></div>
+        <div class="w-full flex-1 ps-4">
+          <SearchBar
+            grayTheme={false}
+            value={terms?.originalFileName ?? terms?.description ?? ''}
+            searchQuery={terms}
+          />
+        </div>
+      </ControlAppBar>
+    {/if}
+  {/snippet}
+
 {#if terms}
   <section
     id="search-chips"
-    class="mt-24 text-center w-full flex gap-5 place-content-center place-items-center flex-wrap px-24"
+    class="mt-4 text-center w-full flex gap-5 place-content-center place-items-center flex-wrap px-24"
   >
     {#each getObjectKeys(terms) as searchKey (searchKey)}
       {@const value = terms[searchKey]}
@@ -262,10 +292,6 @@
           <div class="bg-gray-300 py-2 px-4 dark:bg-gray-800 dark:text-white rounded-e-full">
             {#if (searchKey === 'takenAfter' || searchKey === 'takenBefore') && typeof value === 'string'}
               {getHumanReadableDate(value)}
-            {:else if searchKey === 'personIds' && Array.isArray(value)}
-              {#await getPersonName(value) then personName}
-                {personName}
-              {/await}
             {:else if searchKey === 'tagIds' && (Array.isArray(value) || value === null)}
               {#await getTagNames(value) then tagNames}
                 {tagNames}
@@ -317,71 +343,5 @@
       </div>
     {/if}
   </section>
-
-  <section>
-    {#if assetInteraction.selectionActive}
-      <div class="fixed top-0 start-0 w-full z-2">
-        <AssetSelectControlBar
-          assets={assetInteraction.selectedAssets}
-          clearSelect={() => cancelMultiselect(assetInteraction)}
-        >
-          {@const Actions = getAssetBulkActions($t, assetInteraction.asControlContext())}
-          <CommandPaletteDefaultProvider name={$t('assets')} actions={Object.values(Actions)} />
-
-          <CreateSharedLink />
-          <IconButton
-            shape="round"
-            color="secondary"
-            variant="ghost"
-            aria-label={$t('select_all')}
-            icon={mdiSelectAll}
-            onclick={handleSelectAll}
-          />
-          <ActionButton action={Actions.AddToAlbum} />
-          {#if assetInteraction.isAllUserOwned}
-            <FavoriteAction
-              removeFavorite={assetInteraction.isAllFavorite}
-              onFavorite={(ids, isFavorite) => {
-                for (const id of ids) {
-                  const asset = searchResultAssets.find((asset) => asset.id === id);
-                  if (asset) {
-                    asset.isFavorite = isFavorite;
-                  }
-                }
-              }}
-            />
-
-            <ButtonContextMenu icon={mdiDotsVertical} title={$t('menu')}>
-              <ActionMenuItem action={Actions.AddToAlbum} />
-              <DownloadAction menuItem />
-              <ChangeDate menuItem />
-              <ChangeDescription menuItem />
-              <ChangeLocation menuItem />
-              <ArchiveAction menuItem unarchive={assetInteraction.isAllArchived} />
-              <SetVisibilityAction menuItem onVisibilitySet={handleSetVisibility} />
-              {#if $preferences.tags.enabled}
-                <TagAction menuItem />
-              {/if}
-              <DeleteAssets menuItem {onAssetDelete} onUndoDelete={onSearchQueryUpdate} />
-              <hr />
-              <ActionMenuItem action={Actions.RegenerateThumbnailJob} />
-              <ActionMenuItem action={Actions.RefreshMetadataJob} />
-              <ActionMenuItem action={Actions.TranscodeVideoJob} />
-            </ButtonContextMenu>
-          {:else}
-            <DownloadAction />
-          {/if}
-        </AssetSelectControlBar>
-      </div>
-    {:else}
-      <div class="fixed top-0 start-0 w-full z-2">
-        <ControlAppBar onClose={() => goto(previousRoute)} backIcon={mdiArrowLeft}>
-          <div class="absolute bg-light"></div>
-          <div class="w-full flex-1 ps-4">
-            <SearchBar grayTheme={false} value={terms?.query ?? ''} searchQuery={terms} />
-          </div>
-        </ControlAppBar>
-      </div>
-    {/if}
-  </section>
 </section>
+</UserPageLayout>

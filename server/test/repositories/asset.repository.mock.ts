@@ -30,6 +30,7 @@ export const newAssetRepositoryMock = (): Mocked<RepositoryInterface<AssetReposi
     update: vitest.fn(),
     remove: vitest.fn(),
     findLivePhotoMatch: vitest.fn(),
+    getCategories: vitest.fn(),
     getStatistics: vitest.fn(),
     getTimeBucket: vitest.fn(),
     getTimeBuckets: vitest.fn(),
@@ -55,9 +56,7 @@ export const newAssetRepositoryMock = (): Mocked<RepositoryInterface<AssetReposi
     getForThumbnail: vitest.fn(),
     getForVideo: vitest.fn(),
     getForEdit: vitest.fn(),
-    getForOcr: vitest.fn(),
     getForMetadataExtractionTags: vitest.fn(),
-    getForFaces: vitest.fn(),
     getForUpdateTags: vitest.fn(),
   };
 };

@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { AssetVisibility } from 'src/enum';
+import { AssetVisibility, CategoryType } from 'src/enum';
 import { TimelineService } from 'src/services/timeline.service';
 import { authStub } from 'test/fixtures/auth.stub';
 import { newTestService, ServiceMocks } from 'test/utils';
@@ -39,6 +39,28 @@ describe(TimelineService.name, () => {
       expect(mocks.asset.getTimeBuckets).toHaveBeenCalledWith({
         userIds: [authStub.admin.user.id],
         bbox: { west: -70, south: -30, east: 120, north: 55 },
+      });
+    });
+
+    it('should pass categoryType to repository', async () => {
+      mocks.asset.getTimeBuckets.mockResolvedValue([{ timeBucket: 'bucket', count: 1 }]);
+
+      await sut.getTimeBuckets(authStub.admin, { categoryType: CategoryType.Video });
+
+      expect(mocks.asset.getTimeBuckets).toHaveBeenCalledWith({
+        userIds: [authStub.admin.user.id],
+        categoryType: CategoryType.Video,
+      });
+    });
+
+    it('should pass isRecentlyAdded to repository', async () => {
+      mocks.asset.getTimeBuckets.mockResolvedValue([{ timeBucket: 'bucket', count: 1 }]);
+
+      await sut.getTimeBuckets(authStub.admin, { isRecentlyAdded: true });
+
+      expect(mocks.asset.getTimeBuckets).toHaveBeenCalledWith({
+        userIds: [authStub.admin.user.id],
+        isRecentlyAdded: true,
       });
     });
   });
@@ -148,6 +170,29 @@ describe(TimelineService.name, () => {
         'bucket',
         expect.objectContaining({
           timeBucket: 'bucket',
+          userIds: [authStub.admin.user.id],
+        }),
+        authStub.admin,
+      );
+    });
+
+    it('should pass categoryType to time bucket repository call', async () => {
+      const json = `[{ id: ['asset-id'] }]`;
+      mocks.asset.getTimeBucket.mockResolvedValue({ assets: json });
+
+      await expect(
+        sut.getTimeBucket(authStub.admin, {
+          timeBucket: 'bucket',
+          categoryType: CategoryType.Pictures,
+          userId: authStub.admin.user.id,
+        }),
+      ).resolves.toEqual(json);
+
+      expect(mocks.asset.getTimeBucket).toHaveBeenCalledWith(
+        'bucket',
+        expect.objectContaining({
+          timeBucket: 'bucket',
+          categoryType: CategoryType.Pictures,
           userIds: [authStub.admin.user.id],
         }),
         authStub.admin,

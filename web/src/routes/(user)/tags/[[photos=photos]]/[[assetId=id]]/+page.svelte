@@ -18,7 +18,6 @@
   import DownloadAction from '$lib/components/timeline/actions/DownloadAction.svelte';
   import FavoriteAction from '$lib/components/timeline/actions/FavoriteAction.svelte';
   import SelectAllAssets from '$lib/components/timeline/actions/SelectAllAction.svelte';
-  import SetVisibilityAction from '$lib/components/timeline/actions/SetVisibilityAction.svelte';
   import TagAction from '$lib/components/timeline/actions/TagAction.svelte';
   import { AssetAction } from '$lib/constants';
   import SkipLink from '$lib/elements/SkipLink.svelte';
@@ -30,8 +29,8 @@
   import { preferences, user } from '$lib/stores/user.store';
   import { joinPaths, TreeNode } from '$lib/utils/tree-utils';
   import { getAllTags, type TagResponseDto } from '@immich/sdk';
-  import { ActionButton, CommandPaletteDefaultProvider, Text } from '@immich/ui';
-  import { mdiDotsVertical, mdiTag, mdiTagMultiple } from '@mdi/js';
+  import { ActionButton, CommandPaletteDefaultProvider, IconButton, Text } from '@immich/ui';
+  import { mdiArrowLeft, mdiDotsVertical, mdiTag, mdiTagMultiple } from '@mdi/js';
   import { t } from 'svelte-i18n';
   import type { PageData } from './$types';
 
@@ -56,11 +55,6 @@
 
   const navigateToView = (path: string) => goto(getLink(path));
 
-  const handleSetVisibility = (assetIds: string[]) => {
-    timelineManager.removeAssets(assetIds);
-    assetInteraction.clearMultiselect();
-  };
-
   const onRefresh = async () => {
     tags = await getAllTags();
   };
@@ -78,7 +72,48 @@
 
 <OnEvents onTagCreate={onRefresh} onTagUpdate={onRefresh} {onTagDelete} />
 
-<UserPageLayout title={data.meta.title} actions={[Create, Update, Delete]}>
+<UserPageLayout
+  title={data.meta.title}
+  actions={[Create, Update, Delete]}
+  hideNavbar={assetInteraction.selectionActive}
+  showTopBar={assetInteraction.selectionActive}
+>
+  {#snippet topbar()}
+    <AssetSelectControlBar
+      ownerId={$user.id}
+      assets={assetInteraction.selectedAssets}
+      clearSelect={() => assetInteraction.clearMultiselect()}
+    >
+      {@const Actions = getAssetBulkActions($t, assetInteraction.asControlContext())}
+      <CommandPaletteDefaultProvider name={$t('assets')} actions={Object.values(Actions)} />
+      <CreateSharedLink />
+      <SelectAllAssets {timelineManager} {assetInteraction} />
+      <ActionButton action={Actions.AddToAlbum} />
+      <FavoriteAction
+        removeFavorite={assetInteraction.isAllFavorite}
+        onFavorite={(ids, isFavorite) => timelineManager.update(ids, (asset) => (asset.isFavorite = isFavorite))}
+      />
+      <ButtonContextMenu icon={mdiDotsVertical} title={$t('menu')}>
+        <DownloadAction menuItem />
+        <ChangeDate menuItem />
+        <ChangeDescription menuItem />
+        <ChangeLocation menuItem />
+        <ArchiveAction
+          menuItem
+          onArchive={(ids, visibility) => timelineManager.update(ids, (asset) => (asset.visibility = visibility))}
+        />
+        {#if $preferences.tags.enabled}
+          <TagAction menuItem />
+        {/if}
+        <DeleteAssets
+          menuItem
+          onAssetDelete={(assetIds) => timelineManager.removeAssets(assetIds)}
+          onUndoDelete={(assets) => timelineManager.upsertAssets(assets)}
+        />
+      </ButtonContextMenu>
+    </AssetSelectControlBar>
+  {/snippet}
+
   {#snippet sidebar()}
     <Sidebar>
       <SkipLink target={`#${headerId}`} text={$t('skip_to_tags')} breakpoint="md" />
@@ -91,7 +126,17 @@
     </Sidebar>
   {/snippet}
 
-  <Breadcrumbs node={tag} icon={mdiTagMultiple} title={$t('tags')} {getLink} />
+  <div class="flex items-center gap-1">
+    <IconButton
+      shape="round"
+      color="secondary"
+      variant="ghost"
+      icon={mdiArrowLeft}
+      aria-label={$t('go_back')}
+      onclick={() => goto(Route.photos())}
+    />
+    <Breadcrumbs node={tag} icon={mdiTagMultiple} title={$t('tags')} {getLink} />
+  </div>
 
   <section class="mt-2 h-[calc(100%-(--spacing(20)))] overflow-auto immich-scrollbar">
     {#if tag.hasAssets}
@@ -111,44 +156,3 @@
     {/if}
   </section>
 </UserPageLayout>
-
-<section>
-  {#if assetInteraction.selectionActive}
-    <div class="fixed top-0 start-0 w-full">
-      <AssetSelectControlBar
-        ownerId={$user.id}
-        assets={assetInteraction.selectedAssets}
-        clearSelect={() => assetInteraction.clearMultiselect()}
-      >
-        {@const Actions = getAssetBulkActions($t, assetInteraction.asControlContext())}
-        <CommandPaletteDefaultProvider name={$t('assets')} actions={Object.values(Actions)} />
-        <CreateSharedLink />
-        <SelectAllAssets {timelineManager} {assetInteraction} />
-        <ActionButton action={Actions.AddToAlbum} />
-        <FavoriteAction
-          removeFavorite={assetInteraction.isAllFavorite}
-          onFavorite={(ids, isFavorite) => timelineManager.update(ids, (asset) => (asset.isFavorite = isFavorite))}
-        ></FavoriteAction>
-        <ButtonContextMenu icon={mdiDotsVertical} title={$t('menu')}>
-          <DownloadAction menuItem />
-          <ChangeDate menuItem />
-          <ChangeDescription menuItem />
-          <ChangeLocation menuItem />
-          <ArchiveAction
-            menuItem
-            onArchive={(ids, visibility) => timelineManager.update(ids, (asset) => (asset.visibility = visibility))}
-          />
-          {#if $preferences.tags.enabled}
-            <TagAction menuItem />
-          {/if}
-          <DeleteAssets
-            menuItem
-            onAssetDelete={(assetIds) => timelineManager.removeAssets(assetIds)}
-            onUndoDelete={(assets) => timelineManager.upsertAssets(assets)}
-          />
-          <SetVisibilityAction menuItem onVisibilitySet={handleSetVisibility} />
-        </ButtonContextMenu>
-      </AssetSelectControlBar>
-    </div>
-  {/if}
-</section>

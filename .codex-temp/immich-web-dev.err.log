@@ -1,0 +1,12 @@
+[2m16:48:51[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /custom.css[39m
+Error: getaddrinfo ENOTFOUND immich-server
+    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:120:26)
+    at GetAddrInfoReqWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+[2m16:48:58[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/server/config[39m
+Error: getaddrinfo ENOTFOUND immich-server
+    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:120:26)
+    at GetAddrInfoReqWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+[2m16:49:00[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/server/media-types[39m
+Error: getaddrinfo ENOTFOUND immich-server
+    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:120:26)
+    at GetAddrInfoReqWrap.callbackTrampoline (node:internal/async_hooks:130:17)

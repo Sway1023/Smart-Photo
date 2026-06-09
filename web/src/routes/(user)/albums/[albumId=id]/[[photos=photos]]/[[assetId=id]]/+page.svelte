@@ -23,7 +23,6 @@
   import FavoriteAction from '$lib/components/timeline/actions/FavoriteAction.svelte';
   import RemoveFromAlbum from '$lib/components/timeline/actions/RemoveFromAlbumAction.svelte';
   import SelectAllAssets from '$lib/components/timeline/actions/SelectAllAction.svelte';
-  import SetVisibilityAction from '$lib/components/timeline/actions/SetVisibilityAction.svelte';
   import TagAction from '$lib/components/timeline/actions/TagAction.svelte';
   import AssetSelectControlBar from '$lib/components/timeline/AssetSelectControlBar.svelte';
   import Timeline from '$lib/components/timeline/Timeline.svelte';
@@ -155,11 +154,6 @@
   const handleCloseSelectAssets = async () => {
     timelineInteraction.clearMultiselect();
     await setModeToView();
-  };
-
-  const handleSetVisibility = (assetIds: string[]) => {
-    timelineManager.removeAssets(assetIds);
-    assetInteraction.clearMultiselect();
   };
 
   const handleRemoveAssets = async (assetIds: string[]) => {
@@ -484,7 +478,6 @@
               unarchive={assetInteraction.isAllArchived}
               onArchive={(ids, visibility) => timelineManager.update(ids, (asset) => (asset.visibility = visibility))}
             />
-            <SetVisibilityAction menuItem onVisibilitySet={handleSetVisibility} />
           {/if}
 
           {#if $preferences.tags.enabled && assetInteraction.isAllUserOwned}

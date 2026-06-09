@@ -5,6 +5,7 @@ import { JOBS_ASSET_PAGINATION_SIZE } from 'src/constants';
 import { AssetFile } from 'src/database';
 import { OnJob } from 'src/decorators';
 import { AssetResponseDto, SanitizedAssetResponseDto, mapAsset } from 'src/dtos/asset-response.dto';
+import { CategoryItemDto } from 'src/dtos/category.dto';
 import {
   AssetBulkDeleteDto,
   AssetBulkUpdateDto,
@@ -22,7 +23,6 @@ import {
 } from 'src/dtos/asset.dto';
 import { AuthDto } from 'src/dtos/auth.dto';
 import { AssetEditAction, AssetEditActionItem, AssetEditsCreateDto, AssetEditsResponseDto } from 'src/dtos/editing.dto';
-import { AssetOcrResponseDto } from 'src/dtos/ocr.dto';
 import {
   AssetFileType,
   AssetStatus,
@@ -47,10 +47,27 @@ import {
 } from 'src/utils/asset.util';
 import { updateLockedColumns } from 'src/utils/database';
 import { extractTimeZone } from 'src/utils/date';
-import { transformOcrBoundingBox } from 'src/utils/transform';
+import { hexOrBufferToBase64 } from 'src/utils/bytes';
 
 @Injectable()
 export class AssetService extends BaseService {
+  async getCategories(auth: AuthDto): Promise<CategoryItemDto[]> {
+    const categories = await this.assetRepository.getCategories(auth.user.id);
+
+    return categories
+      .filter((item) => item.count > 0)
+      .map((item) => ({
+        type: item.type,
+        count: item.count,
+        cover: item.coverId
+          ? {
+              id: item.coverId,
+              thumbhash: item.coverThumbhash ? hexOrBufferToBase64(item.coverThumbhash) : null,
+            }
+          : null,
+      }));
+  }
+
   async getStatistics(auth: AuthDto, dto: AssetStatsDto) {
     if (dto.visibility === AssetVisibility.Locked) {
       requireElevatedPermission(auth);
@@ -80,7 +97,6 @@ export class AssetService extends BaseService {
     const asset = await this.assetRepository.getById(id, {
       exifInfo: true,
       owner: true,
-      faces: { person: true },
       stack: { assets: true },
       edits: true,
       tags: true,
@@ -98,10 +114,6 @@ export class AssetService extends BaseService {
 
     if (auth.sharedLink) {
       delete data.owner;
-    }
-
-    if (data.ownerId !== auth.user.id || auth.sharedLink) {
-      data.people = [];
     }
 
     return data;
@@ -401,24 +413,6 @@ export class AssetService extends BaseService {
     return this.assetRepository.getMetadata(id);
   }
 
-  async getOcr(auth: AuthDto, id: string): Promise<AssetOcrResponseDto[]> {
-    await this.requireAccess({ auth, permission: Permission.AssetRead, ids: [id] });
-    const ocr = await this.ocrRepository.getByAssetId(id);
-    const asset = await this.assetRepository.getForOcr(id);
-
-    if (!asset) {
-      throw new BadRequestException('Asset not found');
-    }
-
-    const dimensions = getDimensions({
-      exifImageHeight: asset.exifImageHeight,
-      exifImageWidth: asset.exifImageWidth,
-      orientation: asset.orientation,
-    });
-
-    return ocr.map((item) => transformOcrBoundingBox(item, asset.edits, dimensions));
-  }
-
   async upsertBulkMetadata(auth: AuthDto, dto: AssetMetadataBulkUpsertDto): Promise<AssetMetadataBulkResponseDto[]> {
     await this.requireAccess({ auth, permission: Permission.AssetUpdate, ids: dto.items.map((item) => item.assetId) });
 
@@ -478,8 +472,7 @@ export class AssetService extends BaseService {
     for (const id of dto.assetIds) {
       switch (dto.name) {
         case AssetJobName.REFRESH_FACES: {
-          jobs.push({ name: JobName.AssetDetectFaces, data: { id } });
-          break;
+          throw new BadRequestException('Face processing is not available');
         }
 
         case AssetJobName.REFRESH_METADATA: {

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import SettingAccordion from '$lib/components/shared-components/settings/setting-accordion.svelte';
   import SettingInputField from '$lib/components/shared-components/settings/setting-input-field.svelte';
   import SettingSelect from '$lib/components/shared-components/settings/setting-select.svelte';
@@ -7,8 +8,9 @@
   import { SettingInputFieldType } from '$lib/constants';
   import FormatMessage from '$lib/elements/FormatMessage.svelte';
   import { featureFlagsManager } from '$lib/managers/feature-flags-manager.svelte';
+  import { Route } from '$lib/route';
   import { systemConfigManager } from '$lib/managers/system-config-manager.svelte';
-  import { Link } from '@immich/ui';
+  import { Button, Link } from '@immich/ui';
   import { t } from 'svelte-i18n';
   import { fade } from 'svelte/transition';
 
@@ -28,6 +30,15 @@
   <div in:fade={{ duration: 500 }}>
     <form autocomplete="off" onsubmit={(event) => event.preventDefault()}>
       <div class="ms-4 mt-4 flex flex-col gap-4">
+        <div class="rounded-xl border border-[#D4D4D9] bg-[#F5F5F7] px-4 py-3 text-sm text-[#626266] dark:border-immich-dark-gray dark:bg-immich-dark-gray/40 dark:text-immich-dark-fg/80">
+          <p>{$t('admin.library_folder_description')}</p>
+          <div class="mt-3">
+            <Button size="small" color="secondary" variant="ghost" onclick={() => goto(Route.libraries())}>
+              {$t('external_libraries')}
+            </Button>
+          </div>
+        </div>
+
         <SettingAccordion
           key="library-watching"
           title={$t('admin.library_watching_settings')}

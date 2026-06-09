@@ -20,22 +20,16 @@ import { modalManager, toastManager, type ActionItem, type IconLike } from '@imm
 import {
   mdiClose,
   mdiCog,
-  mdiContentDuplicate,
   mdiDatabaseOutline,
-  mdiFaceRecognition,
   mdiFileJpgBox,
   mdiFileXmlBox,
   mdiFolderMove,
-  mdiImageSearch,
   mdiLibraryShelves,
-  mdiOcr,
   mdiPause,
   mdiPencil,
   mdiPlay,
   mdiPlus,
-  mdiStateMachine,
   mdiTable,
-  mdiTagFaces,
   mdiTrashCanOutline,
   mdiTrayFull,
   mdiVideo,
@@ -163,7 +157,7 @@ const handleRemoveFailedJobs = async (queue: QueueResponseDto) => {
 
 export const asQueueItem = ($t: MessageFormatter, queue: { name: QueueName }): QueueItem => {
   // TODO merge this mapping with data from QueuePanel.svelte
-  const items: Record<QueueName, QueueItem> = {
+  const items: Partial<Record<QueueName, QueueItem>> = {
     [QueueName.ThumbnailGeneration]: {
       icon: mdiFileJpgBox,
       title: $t('admin.thumbnail_generation_job'),
@@ -183,31 +177,6 @@ export const asQueueItem = ($t: MessageFormatter, queue: { name: QueueName }): Q
       title: $t('admin.sidecar_job'),
       icon: mdiFileXmlBox,
       subtitle: $t('admin.sidecar_job_description'),
-    },
-    [QueueName.SmartSearch]: {
-      icon: mdiImageSearch,
-      title: $t('admin.machine_learning_smart_search'),
-      subtitle: $t('admin.smart_search_job_description'),
-    },
-    [QueueName.DuplicateDetection]: {
-      icon: mdiContentDuplicate,
-      title: $t('admin.machine_learning_duplicate_detection'),
-      subtitle: $t('admin.duplicate_detection_job_description'),
-    },
-    [QueueName.FaceDetection]: {
-      icon: mdiFaceRecognition,
-      title: $t('admin.face_detection'),
-      subtitle: $t('admin.face_detection_description'),
-    },
-    [QueueName.FacialRecognition]: {
-      icon: mdiTagFaces,
-      title: $t('admin.machine_learning_facial_recognition'),
-      subtitle: $t('admin.facial_recognition_job_description'),
-    },
-    [QueueName.Ocr]: {
-      icon: mdiOcr,
-      title: $t('admin.machine_learning_ocr'),
-      subtitle: $t('admin.ocr_job_description'),
     },
     [QueueName.VideoConversion]: {
       icon: mdiVideo,
@@ -239,15 +208,16 @@ export const asQueueItem = ($t: MessageFormatter, queue: { name: QueueName }): Q
       icon: mdiDatabaseOutline,
       title: $t('admin.backup_database'),
     },
-    [QueueName.Workflow]: {
-      icon: mdiStateMachine,
-      title: $t('workflows'),
-    },
     [QueueName.Editor]: {
       icon: mdiPencil,
       title: $t('editor'),
     },
   };
 
-  return items[queue.name];
+  return (
+    items[queue.name] ?? {
+      icon: mdiTrayFull,
+      title: queue.name,
+    }
+  );
 };

@@ -1,6 +1,8 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import SettingAccordion from '$lib/components/shared-components/settings/setting-accordion.svelte';
-  import { preferences } from '$lib/stores/user.store';
+  import { Route } from '$lib/route';
+  import { preferences, user } from '$lib/stores/user.store';
   import { handleError } from '$lib/utils/handle-error';
   import { AssetOrder, updateMyPreferences } from '@immich/sdk';
   import { Button, Field, NumberInput, Select, Switch, toastManager } from '@immich/ui';
@@ -33,9 +35,6 @@
   let tagsEnabled = $state($preferences?.tags?.enabled ?? false);
   let tagsSidebar = $state($preferences?.tags?.sidebarWeb ?? false);
 
-  // Cast
-  let gCastEnabled = $state($preferences?.cast?.gCastEnabled ?? false);
-
   const handleSave = async () => {
     try {
       const data = await updateMyPreferences({
@@ -47,7 +46,6 @@
           ratings: { enabled: ratingsEnabled },
           sharedLinks: { enabled: sharedLinksEnabled, sidebarWeb: sharedLinkSidebar },
           tags: { enabled: tagsEnabled, sidebarWeb: tagsSidebar },
-          cast: { gCastEnabled },
         },
       });
 
@@ -92,6 +90,17 @@
               <Field label={$t('sidebar')} description={$t('sidebar_display_description')}>
                 <Switch bind:checked={foldersSidebar} />
               </Field>
+
+              {#if $user.isAdmin}
+                <div class="rounded-xl border border-[#D4D4D9] bg-[#F5F5F7] px-4 py-3 text-sm text-[#626266] dark:border-immich-dark-gray dark:bg-immich-dark-gray/40 dark:text-immich-dark-fg/80">
+                  <p>{$t('admin.library_folder_description')}</p>
+                  <div class="mt-3">
+                    <Button size="small" color="secondary" variant="ghost" onclick={() => goto(Route.libraries())}>
+                      {$t('external_libraries')}
+                    </Button>
+                  </div>
+                </div>
+              {/if}
             {/if}
           </div>
         </SettingAccordion>
@@ -157,15 +166,6 @@
             {/if}
           </div>
         </SettingAccordion>
-
-        <SettingAccordion key="cast" title={$t('cast')} subtitle={$t('cast_description')}>
-          <div class="sm:ms-4 mt-4 flex flex-col gap-4">
-            <Field label={$t('gcast_enabled')} description={$t('gcast_enabled_description')}>
-              <Switch bind:checked={gCastEnabled} />
-            </Field>
-          </div>
-        </SettingAccordion>
-
         <div class="flex justify-end mt-4">
           <Button shape="round" type="submit" size="small" onclick={() => handleSave()}>{$t('save')}</Button>
         </div>

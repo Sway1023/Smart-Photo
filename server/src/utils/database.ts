@@ -15,7 +15,7 @@ import {
 import { PostgresJSDialect } from 'kysely-postgres-js';
 import { jsonArrayFrom, jsonObjectFrom } from 'kysely/helpers/postgres';
 import { Notice, PostgresError } from 'postgres';
-import { columns, lockableProperties, LockableProperty, Person } from 'src/database';
+import { columns, lockableProperties, LockableProperty } from 'src/database';
 import { AssetEditActionItem } from 'src/dtos/editing.dto';
 import { AssetFileType, AssetVisibility, DatabaseExtension } from 'src/enum';
 import { AssetSearchBuilderOptions } from 'src/repositories/search.repository';
@@ -99,23 +99,6 @@ export function withExifInner<O>(qb: SelectQueryBuilder<DB, 'asset', O>) {
     .$narrowType<{ exifInfo: NotNull }>();
 }
 
-export function withSmartSearch<O>(qb: SelectQueryBuilder<DB, 'asset', O>) {
-  return qb
-    .leftJoin('smart_search', 'asset.id', 'smart_search.assetId')
-    .select((eb) => jsonObjectFrom(eb.table('smart_search')).as('smartSearch'));
-}
-
-export function withFaces(eb: ExpressionBuilder<DB, 'asset'>, withHidden?: boolean, withDeletedFace?: boolean) {
-  return jsonArrayFrom(
-    eb
-      .selectFrom('asset_face')
-      .selectAll('asset_face')
-      .whereRef('asset_face.assetId', '=', 'asset.id')
-      .$if(!withDeletedFace, (qb) => qb.where('asset_face.deletedAt', 'is', null))
-      .$if(!withHidden, (qb) => qb.where('asset_face.isVisible', '=', true)),
-  ).as('faces');
-}
-
 export function withFiles(eb: ExpressionBuilder<DB, 'asset'>, type?: AssetFileType) {
   return jsonArrayFrom(
     eb
@@ -132,43 +115,6 @@ export function withFilePath(eb: ExpressionBuilder<DB, 'asset'>, type: AssetFile
     .select('asset_file.path')
     .whereRef('asset_file.assetId', '=', 'asset.id')
     .where('asset_file.type', '=', type);
-}
-
-export function withFacesAndPeople(
-  eb: ExpressionBuilder<DB, 'asset'>,
-  withHidden?: boolean,
-  withDeletedFace?: boolean,
-) {
-  return jsonArrayFrom(
-    eb
-      .selectFrom('asset_face')
-      .leftJoinLateral(
-        (eb) =>
-          eb.selectFrom('person').selectAll('person').whereRef('asset_face.personId', '=', 'person.id').as('person'),
-        (join) => join.onTrue(),
-      )
-      .selectAll('asset_face')
-      .select((eb) => eb.table('person').$castTo<ShallowDehydrateObject<Person>>().as('person'))
-      .whereRef('asset_face.assetId', '=', 'asset.id')
-      .$if(!withDeletedFace, (qb) => qb.where('asset_face.deletedAt', 'is', null))
-      .$if(!withHidden, (qb) => qb.where('asset_face.isVisible', 'is', true)),
-  ).as('faces');
-}
-
-export function hasPeople<O>(qb: SelectQueryBuilder<DB, 'asset', O>, personIds: string[]) {
-  return qb.innerJoin(
-    (eb) =>
-      eb
-        .selectFrom('asset_face')
-        .select('assetId')
-        .where('personId', '=', anyUuid(personIds!))
-        .where('deletedAt', 'is', null)
-        .where('isVisible', 'is', true)
-        .groupBy('assetId')
-        .having((eb) => eb.fn.count('personId').distinct(), '=', personIds.length)
-        .as('has_people'),
-    (join) => join.onRef('has_people.assetId', '=', 'asset.id'),
-  );
 }
 
 export function inAlbums<O>(qb: SelectQueryBuilder<DB, 'asset', O>, albumIds: string[]) {
@@ -224,6 +170,14 @@ export function withTags(eb: ExpressionBuilder<DB, 'asset'>) {
 
 export function truncatedDate<O>() {
   return sql<O>`date_trunc(${sql.lit('MONTH')}, "localDateTime" AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'`;
+}
+
+export function truncatedDateCreatedAt<O>() {
+  return sql<O>`date_trunc(${sql.lit('MONTH')}, asset."createdAt" AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'`;
+}
+
+export function recentlyAddedCutoff(days: number) {
+  return sql<Date>`now() - ${sql.raw(`interval '${days} days'`)}`;
 }
 
 export function withTagId<O>(qb: SelectQueryBuilder<DB, 'asset', O>, tagId: string) {
@@ -305,7 +259,6 @@ export function searchAssetBuilder(kysely: Kysely<DB>, options: AssetSearchBuild
     .$if(options.tagIds === null, (qb) =>
       qb.where((eb) => eb.not(eb.exists((eb) => eb.selectFrom('tag_asset').whereRef('assetId', '=', 'asset.id')))),
     )
-    .$if(!!options.personIds && options.personIds.length > 0, (qb) => hasPeople(qb, options.personIds!))
     .$if(!!options.createdBefore, (qb) => qb.where('asset.createdAt', '<=', options.createdBefore!))
     .$if(!!options.createdAfter, (qb) => qb.where('asset.createdAt', '>=', options.createdAfter!))
     .$if(!!options.updatedBefore, (qb) => qb.where('asset.updatedAt', '<=', options.updatedBefore!))
@@ -380,11 +333,6 @@ export function searchAssetBuilder(kysely: Kysely<DB>, options: AssetSearchBuild
         .innerJoin('asset_exif', 'asset.id', 'asset_exif.assetId')
         .where(sql`f_unaccent(asset_exif.description)`, 'ilike', sql`'%' || f_unaccent(${options.description}) || '%'`),
     )
-    .$if(!!options.ocr, (qb) =>
-      qb
-        .innerJoin('ocr_search', 'asset.id', 'ocr_search.assetId')
-        .where(() => sql`f_unaccent(ocr_search.text) %>> f_unaccent(${tokenizeForSearch(options.ocr!).join(' ')})`),
-    )
     .$if(!!options.type, (qb) => qb.where('asset.type', '=', options.type!))
     .$if(options.isFavorite !== undefined, (qb) => qb.where('asset.isFavorite', '=', options.isFavorite!))
     .$if(options.isOffline !== undefined, (qb) => qb.where('asset.isOffline', '=', options.isOffline!))
@@ -407,7 +355,6 @@ export function searchAssetBuilder(kysely: Kysely<DB>, options: AssetSearchBuild
     )
     .$if(options.withStacked === false, (qb) => qb.where('asset.stackId', 'is', null))
     .$if(!!options.withExif, withExifInner)
-    .$if(!!(options.withFaces || options.withPeople), (qb) => qb.select(withFacesAndPeople))
     .$if(!options.withDeleted, (qb) => qb.where('asset.deletedAt', 'is', null));
 }
 

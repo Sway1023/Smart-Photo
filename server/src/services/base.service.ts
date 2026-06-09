@@ -20,7 +20,6 @@ import { CronRepository } from 'src/repositories/cron.repository';
 import { CryptoRepository } from 'src/repositories/crypto.repository';
 import { DatabaseRepository } from 'src/repositories/database.repository';
 import { DownloadRepository } from 'src/repositories/download.repository';
-import { DuplicateRepository } from 'src/repositories/duplicate.repository';
 import { EmailRepository } from 'src/repositories/email.repository';
 import { EventRepository } from 'src/repositories/event.repository';
 import { JobRepository } from 'src/repositories/job.repository';
@@ -34,10 +33,7 @@ import { MetadataRepository } from 'src/repositories/metadata.repository';
 import { MoveRepository } from 'src/repositories/move.repository';
 import { NotificationRepository } from 'src/repositories/notification.repository';
 import { OAuthRepository } from 'src/repositories/oauth.repository';
-import { OcrRepository } from 'src/repositories/ocr.repository';
 import { PartnerRepository } from 'src/repositories/partner.repository';
-import { PersonRepository } from 'src/repositories/person.repository';
-import { PluginRepository } from 'src/repositories/plugin.repository';
 import { ProcessRepository } from 'src/repositories/process.repository';
 import { SearchRepository } from 'src/repositories/search.repository';
 import { ServerInfoRepository } from 'src/repositories/server-info.repository';
@@ -56,7 +52,6 @@ import { UserRepository } from 'src/repositories/user.repository';
 import { VersionHistoryRepository } from 'src/repositories/version-history.repository';
 import { ViewRepository } from 'src/repositories/view-repository';
 import { WebsocketRepository } from 'src/repositories/websocket.repository';
-import { WorkflowRepository } from 'src/repositories/workflow.repository';
 import { UserTable } from 'src/schema/tables/user.table';
 import { AccessRequest, checkAccess, requireAccess } from 'src/utils/access';
 import { getConfig, updateConfig } from 'src/utils/config';
@@ -78,7 +73,6 @@ export const BASE_SERVICE_DEPENDENCIES = [
   CryptoRepository,
   DatabaseRepository,
   DownloadRepository,
-  DuplicateRepository,
   EmailRepository,
   EventRepository,
   JobRepository,
@@ -91,10 +85,7 @@ export const BASE_SERVICE_DEPENDENCIES = [
   MoveRepository,
   NotificationRepository,
   OAuthRepository,
-  OcrRepository,
   PartnerRepository,
-  PersonRepository,
-  PluginRepository,
   ProcessRepository,
   SearchRepository,
   ServerInfoRepository,
@@ -113,7 +104,6 @@ export const BASE_SERVICE_DEPENDENCIES = [
   VersionHistoryRepository,
   ViewRepository,
   WebsocketRepository,
-  WorkflowRepository,
 ];
 
 @Injectable()
@@ -137,7 +127,6 @@ export class BaseService {
     protected cryptoRepository: CryptoRepository,
     protected databaseRepository: DatabaseRepository,
     protected downloadRepository: DownloadRepository,
-    protected duplicateRepository: DuplicateRepository,
     protected emailRepository: EmailRepository,
     protected eventRepository: EventRepository,
     protected jobRepository: JobRepository,
@@ -150,10 +139,7 @@ export class BaseService {
     protected moveRepository: MoveRepository,
     protected notificationRepository: NotificationRepository,
     protected oauthRepository: OAuthRepository,
-    protected ocrRepository: OcrRepository,
     protected partnerRepository: PartnerRepository,
-    protected personRepository: PersonRepository,
-    protected pluginRepository: PluginRepository,
     protected processRepository: ProcessRepository,
     protected searchRepository: SearchRepository,
     protected serverInfoRepository: ServerInfoRepository,
@@ -172,7 +158,6 @@ export class BaseService {
     protected versionRepository: VersionHistoryRepository,
     protected viewRepository: ViewRepository,
     protected websocketRepository: WebsocketRepository,
-    protected workflowRepository: WorkflowRepository,
   ) {
     this.logger.setContext(this.constructor.name);
     this.storageCore = StorageCore.create(
@@ -180,7 +165,6 @@ export class BaseService {
       configRepository,
       cryptoRepository,
       moveRepository,
-      personRepository,
       storageRepository,
       systemMetadataRepository,
       this.logger,

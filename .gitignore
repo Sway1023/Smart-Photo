@@ -8,6 +8,9 @@
 
 docker/upload
 docker/library
+docker/import/*
+!docker/import/.gitkeep
+!docker/import/README.txt
 uploads
 coverage
 

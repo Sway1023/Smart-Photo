@@ -4,8 +4,10 @@ import dotenv from 'dotenv';
 
 dotenv.config({ quiet: true });
 
-process.env.PUBLIC_IMMICH_BUY_HOST = process.env.PUBLIC_IMMICH_BUY_HOST || 'https://buy.immich.app';
-process.env.PUBLIC_IMMICH_PAY_HOST = process.env.PUBLIC_IMMICH_PAY_HOST || 'https://pay.futo.org';
+const isDev = process.env.NODE_ENV !== 'production';
+
+process.env.PUBLIC_IMMICH_BUY_HOST = process.env.PUBLIC_IMMICH_BUY_HOST;
+process.env.PUBLIC_IMMICH_PAY_HOST = process.env.PUBLIC_IMMICH_PAY_HOST;
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -14,6 +16,11 @@ const config = {
     // runes: true,
   },
   preprocess: vitePreprocess(),
+  vitePlugin: {
+    inspector: isDev && {
+      toggleKeyCombo: 'control-shift',
+    },
+  },
   kit: {
     paths: {
       relative: false,

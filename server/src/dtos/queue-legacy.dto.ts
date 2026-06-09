@@ -30,9 +30,6 @@ export class QueuesResponseLegacyDto implements Record<QueueName, QueueResponseL
   [QueueName.VideoConversion]!: QueueResponseLegacyDto;
 
   @ApiProperty({ type: QueueResponseLegacyDto })
-  [QueueName.SmartSearch]!: QueueResponseLegacyDto;
-
-  @ApiProperty({ type: QueueResponseLegacyDto })
   [QueueName.StorageTemplateMigration]!: QueueResponseLegacyDto;
 
   @ApiProperty({ type: QueueResponseLegacyDto })
@@ -45,15 +42,6 @@ export class QueuesResponseLegacyDto implements Record<QueueName, QueueResponseL
   [QueueName.Search]!: QueueResponseLegacyDto;
 
   @ApiProperty({ type: QueueResponseLegacyDto })
-  [QueueName.DuplicateDetection]!: QueueResponseLegacyDto;
-
-  @ApiProperty({ type: QueueResponseLegacyDto })
-  [QueueName.FaceDetection]!: QueueResponseLegacyDto;
-
-  @ApiProperty({ type: QueueResponseLegacyDto })
-  [QueueName.FacialRecognition]!: QueueResponseLegacyDto;
-
-  @ApiProperty({ type: QueueResponseLegacyDto })
   [QueueName.Sidecar]!: QueueResponseLegacyDto;
 
   @ApiProperty({ type: QueueResponseLegacyDto })
@@ -64,12 +52,6 @@ export class QueuesResponseLegacyDto implements Record<QueueName, QueueResponseL
 
   @ApiProperty({ type: QueueResponseLegacyDto })
   [QueueName.BackupDatabase]!: QueueResponseLegacyDto;
-
-  @ApiProperty({ type: QueueResponseLegacyDto })
-  [QueueName.Ocr]!: QueueResponseLegacyDto;
-
-  @ApiProperty({ type: QueueResponseLegacyDto })
-  [QueueName.Workflow]!: QueueResponseLegacyDto;
 
   @ApiProperty({ type: QueueResponseLegacyDto })
   [QueueName.Editor]!: QueueResponseLegacyDto;

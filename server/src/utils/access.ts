@@ -233,10 +233,6 @@ const checkOtherAccess = async (access: AccessRepository, request: OtherAccessRe
       return await access.authDevice.checkOwnerAccess(auth.user.id, ids);
     }
 
-    case Permission.FaceDelete: {
-      return access.person.checkFaceOwnerAccess(auth.user.id, ids);
-    }
-
     case Permission.NotificationRead:
     case Permission.NotificationUpdate:
     case Permission.NotificationDelete: {
@@ -272,21 +268,6 @@ const checkOtherAccess = async (access: AccessRepository, request: OtherAccessRe
       return access.memory.checkOwnerAccess(auth.user.id, ids);
     }
 
-    case Permission.PersonCreate: {
-      return access.person.checkFaceOwnerAccess(auth.user.id, ids);
-    }
-
-    case Permission.PersonRead:
-    case Permission.PersonUpdate:
-    case Permission.PersonDelete:
-    case Permission.PersonMerge: {
-      return await access.person.checkOwnerAccess(auth.user.id, ids);
-    }
-
-    case Permission.PersonReassign: {
-      return access.person.checkFaceOwnerAccess(auth.user.id, ids);
-    }
-
     case Permission.PartnerUpdate: {
       return await access.partner.checkUpdateAccess(auth.user.id, ids);
     }
@@ -308,12 +289,6 @@ const checkOtherAccess = async (access: AccessRepository, request: OtherAccessRe
 
     case Permission.StackDelete: {
       return access.stack.checkOwnerAccess(auth.user.id, ids);
-    }
-
-    case Permission.WorkflowRead:
-    case Permission.WorkflowUpdate:
-    case Permission.WorkflowDelete: {
-      return access.workflow.checkOwnerAccess(auth.user.id, ids);
     }
 
     default: {

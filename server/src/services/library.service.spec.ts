@@ -64,7 +64,7 @@ describe(LibraryService.name, () => {
     });
 
     it('should initialize watcher for all external libraries', async () => {
-      const library1 = factory.library({ importPaths: ['/foo', '/bar'] });
+      const library1 = factory.library({ importPaths: ['/external/foo', '/external/bar'] });
       const library2 = factory.library({ importPaths: ['/xyz', '/asdf'] });
 
       mocks.library.getAll.mockResolvedValue([library1, library2]);
@@ -162,7 +162,7 @@ describe(LibraryService.name, () => {
 
   describe('handleQueueSyncFiles', () => {
     it('should queue refresh of a new asset', async () => {
-      const library = factory.library({ importPaths: ['/foo', '/bar'] });
+      const library = factory.library({ importPaths: ['/external/foo', '/external/bar'] });
 
       mocks.library.get.mockResolvedValue(library);
       mocks.storage.walk.mockImplementation(mockWalk);
@@ -183,13 +183,13 @@ describe(LibraryService.name, () => {
     });
 
     it('should fail when library is not found', async () => {
-      const library = factory.library({ importPaths: ['/foo', '/bar'] });
+      const library = factory.library({ importPaths: ['/external/foo', '/external/bar'] });
 
       await expect(sut.handleQueueSyncFiles({ id: library.id })).resolves.toBe(JobStatus.Skipped);
     });
 
     it('should ignore import paths that do not exist', async () => {
-      const library = factory.library({ importPaths: ['/foo', '/bar'] });
+      const library = factory.library({ importPaths: ['/external/foo', '/external/bar'] });
       mocks.storage.stat.mockImplementation((path): Promise<Stats> => {
         if (path === library.importPaths[0]) {
           const error = { code: 'ENOENT' } as any;
@@ -217,7 +217,7 @@ describe(LibraryService.name, () => {
 
   describe('handleQueueSyncFiles', () => {
     it('should queue refresh of a new asset', async () => {
-      const library = factory.library({ importPaths: ['/foo', '/bar'] });
+      const library = factory.library({ importPaths: ['/external/foo', '/external/bar'] });
 
       mocks.library.get.mockResolvedValue(library);
       mocks.storage.walk.mockImplementation(mockWalk);
@@ -238,13 +238,13 @@ describe(LibraryService.name, () => {
     });
 
     it("should fail when library can't be found", async () => {
-      const library = factory.library({ importPaths: ['/foo', '/bar'] });
+      const library = factory.library({ importPaths: ['/external/foo', '/external/bar'] });
 
       await expect(sut.handleQueueSyncFiles({ id: library.id })).resolves.toBe(JobStatus.Skipped);
     });
 
     it('should ignore import paths that do not exist', async () => {
-      const library = factory.library({ importPaths: ['/foo', '/bar'] });
+      const library = factory.library({ importPaths: ['/external/foo', '/external/bar'] });
 
       mocks.storage.stat.mockImplementation((path): Promise<Stats> => {
         if (path === library.importPaths[0]) {
@@ -305,7 +305,7 @@ describe(LibraryService.name, () => {
     });
 
     it('should queue asset sync', async () => {
-      const library = factory.library({ importPaths: ['/foo', '/bar'] });
+      const library = factory.library({ importPaths: ['/external/foo', '/external/bar'] });
       const asset = AssetFactory.create({ libraryId: library.id, isExternal: true });
 
       mocks.library.get.mockResolvedValue(library);
@@ -634,7 +634,7 @@ describe(LibraryService.name, () => {
     });
 
     it('should unwatch an external library when deleted', async () => {
-      const library = factory.library({ importPaths: ['/foo', '/bar'] });
+      const library = factory.library({ importPaths: ['/external/foo', '/external/bar'] });
 
       mocks.asset.getByLibraryIdAndOriginalPath.mockResolvedValue(AssetFactory.create());
       mocks.library.get.mockResolvedValue(library);
@@ -783,7 +783,7 @@ describe(LibraryService.name, () => {
       });
 
       it('should create watched with import paths', async () => {
-        const library = factory.library({ importPaths: ['/foo', '/bar'] });
+        const library = factory.library({ importPaths: ['/external/foo', '/external/bar'] });
 
         mocks.library.create.mockResolvedValue(library);
         mocks.library.get.mockResolvedValue(library);
@@ -880,12 +880,10 @@ describe(LibraryService.name, () => {
       mocks.storage.stat.mockResolvedValue({ isDirectory: () => true } as Stats);
       mocks.storage.checkFileExists.mockResolvedValue(true);
 
-      const cwd = process.cwd();
-
-      await expect(sut.update('library-id', { importPaths: [`${cwd}/foo/bar`] })).resolves.toEqual(mapLibrary(library));
+      await expect(sut.update('library-id', { importPaths: ['/external/foo/bar'] })).resolves.toEqual(mapLibrary(library));
       expect(mocks.library.update).toHaveBeenCalledWith(
         'library-id',
-        expect.objectContaining({ importPaths: [`${cwd}/foo/bar`] }),
+        expect.objectContaining({ importPaths: ['/external/foo/bar'] }),
       );
     });
   });
@@ -909,7 +907,7 @@ describe(LibraryService.name, () => {
       });
 
       it('should not watch library', async () => {
-        const library = factory.library({ importPaths: ['/foo', '/bar'] });
+        const library = factory.library({ importPaths: ['/external/foo', '/external/bar'] });
 
         mocks.library.getAll.mockResolvedValue([library]);
 
@@ -928,7 +926,7 @@ describe(LibraryService.name, () => {
       });
 
       it('should watch library', async () => {
-        const library = factory.library({ importPaths: ['/foo', '/bar'] });
+        const library = factory.library({ importPaths: ['/external/foo', '/external/bar'] });
 
         mocks.library.get.mockResolvedValue(library);
         mocks.library.getAll.mockResolvedValue([library]);
@@ -939,7 +937,7 @@ describe(LibraryService.name, () => {
       });
 
       it('should watch and unwatch library', async () => {
-        const library = factory.library({ importPaths: ['/foo', '/bar'] });
+        const library = factory.library({ importPaths: ['/external/foo', '/external/bar'] });
 
         mocks.library.getAll.mockResolvedValue([library]);
         mocks.library.get.mockResolvedValue(library);
@@ -964,7 +962,7 @@ describe(LibraryService.name, () => {
       });
 
       it('should handle a new file event', async () => {
-        const library = factory.library({ importPaths: ['/foo', '/bar'] });
+        const library = factory.library({ importPaths: ['/external/foo', '/external/bar'] });
 
         mocks.library.get.mockResolvedValue(library);
         mocks.library.getAll.mockResolvedValue([library]);
@@ -983,7 +981,7 @@ describe(LibraryService.name, () => {
       });
 
       it('should handle a file change event', async () => {
-        const library = factory.library({ importPaths: ['/foo', '/bar'] });
+        const library = factory.library({ importPaths: ['/external/foo', '/external/bar'] });
 
         mocks.library.get.mockResolvedValue(library);
         mocks.library.getAll.mockResolvedValue([library]);
@@ -1004,7 +1002,7 @@ describe(LibraryService.name, () => {
       });
 
       it('should handle a file unlink event', async () => {
-        const library = factory.library({ importPaths: ['/foo', '/bar'] });
+        const library = factory.library({ importPaths: ['/external/foo', '/external/bar'] });
         const asset = AssetFactory.create();
 
         mocks.library.get.mockResolvedValue(library);
@@ -1026,7 +1024,7 @@ describe(LibraryService.name, () => {
       });
 
       it('should handle an error event', async () => {
-        const library = factory.library({ importPaths: ['/foo', '/bar'] });
+        const library = factory.library({ importPaths: ['/external/foo', '/external/bar'] });
         const asset = AssetFactory.create({ libraryId: library.id, isExternal: true });
 
         mocks.library.get.mockResolvedValue(library);
@@ -1042,7 +1040,7 @@ describe(LibraryService.name, () => {
       });
 
       it('should not import a file with unknown extension', async () => {
-        const library = factory.library({ importPaths: ['/foo', '/bar'] });
+        const library = factory.library({ importPaths: ['/external/foo', '/external/bar'] });
 
         mocks.library.get.mockResolvedValue(library);
         mocks.library.getAll.mockResolvedValue([library]);
@@ -1088,7 +1086,7 @@ describe(LibraryService.name, () => {
 
   describe('teardown', () => {
     it('should tear down all watchers', async () => {
-      const library1 = factory.library({ importPaths: ['/foo', '/bar'] });
+      const library1 = factory.library({ importPaths: ['/external/foo', '/external/bar'] });
       const library2 = factory.library({ importPaths: ['/xyz', '/asdf'] });
 
       mocks.library.getAll.mockResolvedValue([library1, library2]);
@@ -1258,21 +1256,19 @@ describe(LibraryService.name, () => {
     });
 
     it('should detect when import path is not absolute', async () => {
-      const cwd = process.cwd();
-
       await expect(sut.validate('library-id', { importPaths: ['relative/path'] })).resolves.toEqual({
         importPaths: [
           {
             importPath: 'relative/path',
             isValid: false,
-            message: `Import path must be absolute, try ${cwd}/relative/path`,
+            message: expect.stringContaining('Import path must be absolute'),
           },
         ],
       });
     });
 
     it('should detect when import path is in immich media folder', async () => {
-      const importPaths = ['/data/thumbs', `${process.cwd()}/xyz`, '/data/library'];
+      const importPaths = ['/data/thumbs', '/external/xyz', '/data/library'];
       const library = factory.library({ importPaths });
 
       mocks.storage.stat.mockResolvedValue({ isDirectory: () => true } as Stats);
@@ -1284,7 +1280,7 @@ describe(LibraryService.name, () => {
           {
             importPath: importPaths[0],
             isValid: false,
-            message: 'Cannot use media upload folder for external libraries',
+            message: 'Import path must be under /external',
           },
           {
             importPath: importPaths[1],
@@ -1293,7 +1289,19 @@ describe(LibraryService.name, () => {
           {
             importPath: importPaths[2],
             isValid: false,
-            message: 'Cannot use media upload folder for external libraries',
+            message: 'Import path must be under /external',
+          },
+        ],
+      });
+    });
+
+    it('should reject import paths outside the external library root', async () => {
+      await expect(sut.validate('library-id', { importPaths: ['/foo/bar'] })).resolves.toEqual({
+        importPaths: [
+          {
+            importPath: '/foo/bar',
+            isValid: false,
+            message: 'Import path must be under /external',
           },
         ],
       });

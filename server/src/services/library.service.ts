@@ -8,6 +8,8 @@ import { JOBS_LIBRARY_PAGINATION_SIZE } from 'src/constants';
 import { StorageCore } from 'src/cores/storage.core';
 import { OnEvent, OnJob } from 'src/decorators';
 import {
+  BrowseLibraryDirectoriesResponseDto,
+  BrowseLibraryQueryDto,
   CreateLibraryDto,
   LibraryResponseDto,
   LibraryStatsResponseDto,
@@ -17,7 +19,7 @@ import {
   ValidateLibraryImportPathResponseDto,
   ValidateLibraryResponseDto,
 } from 'src/dtos/library.dto';
-import { AssetStatus, AssetType, CronJob, DatabaseLock, ImmichWorker, JobName, JobStatus, QueueName } from 'src/enum';
+import { AssetStatus, AssetType, BootstrapEventPriority, CronJob, DatabaseLock, ImmichWorker, JobName, JobStatus, QueueName } from 'src/enum';
 import { ArgOf } from 'src/repositories/event.repository';
 import { AssetSyncResult } from 'src/repositories/library.repository';
 import { AssetTable } from 'src/schema/tables/asset.table';
@@ -25,6 +27,8 @@ import { BaseService } from 'src/services/base.service';
 import { JobOf } from 'src/types';
 import { mimeTypes } from 'src/utils/mime-types';
 import { handlePromiseError } from 'src/utils/misc';
+
+const DEFAULT_EXTERNAL_LIBRARY_ROOT = '/external';
 
 @Injectable()
 export class LibraryService extends BaseService {
@@ -74,6 +78,68 @@ export class LibraryService extends BaseService {
       this.watchLibraries = library.watch.enabled;
       await (this.watchLibraries ? this.watchAll() : this.unwatchAll());
     }
+  }
+
+  @OnEvent({ name: 'AppBootstrap', priority: BootstrapEventPriority.StorageService + 1 })
+  async onBootstrap() {
+    const root = this.getExternalLibraryRoot();
+    try {
+      if (!this.storageRepository.existsSync(root)) {
+        this.logger.warn(
+          `External library root does not exist: ${root}. Bind-mount EXTERNAL_LIBRARY_LOCATION to this path in docker compose.`,
+        );
+        return;
+      }
+
+      await this.getReadableDirectoryStats(root);
+      this.logger.log(`External library root is ready: ${root}`);
+    } catch {
+      this.logger.warn(
+        `External library root is not readable: ${root}. Bind-mount EXTERNAL_LIBRARY_LOCATION to this path in docker compose.`,
+      );
+    }
+  }
+
+  async browseDirectories({ path: directoryPath }: BrowseLibraryQueryDto): Promise<BrowseLibraryDirectoriesResponseDto> {
+    const root = this.getExternalLibraryRoot();
+    await this.ensureExternalLibraryRootExists();
+
+    const targetPath = path.posix.normalize((directoryPath || root).replace(/\\/g, '/'));
+    if (!path.posix.isAbsolute(targetPath)) {
+      throw new BadRequestException('Path must be absolute');
+    }
+
+    this.assertPathUnderExternalRoot(targetPath);
+
+    const stats = await this.getReadableDirectoryStats(targetPath);
+    if (!stats.isDirectory()) {
+      throw new BadRequestException('Not a directory');
+    }
+
+    const entries = await this.storageRepository.readdir(targetPath);
+    const directories = (
+      await Promise.all(
+        entries.map(async (entry) => {
+          const entryPath = path.join(targetPath, entry);
+          try {
+            const entryStats = await this.getReadableDirectoryStats(entryPath);
+            return entryStats.isDirectory() ? { name: entry, path: entryPath } : null;
+          } catch {
+            return null;
+          }
+        }),
+      )
+    )
+      .filter((entry): entry is { name: string; path: string } => !!entry)
+      .sort((left, right) => left.name.localeCompare(right.name));
+
+    const parentPath = targetPath === root ? undefined : path.posix.dirname(targetPath);
+
+    return {
+      currentPath: targetPath,
+      parentPath: parentPath && this.isPathUnderExternalRoot(parentPath) ? parentPath : undefined,
+      directories,
+    };
   }
 
   private async watch(id: string): Promise<boolean> {
@@ -149,6 +215,44 @@ export class LibraryService extends BaseService {
     await ready$;
 
     return true;
+  }
+
+  private getExternalLibraryRoot(): string {
+    const root = this.configRepository.getEnv().storage.externalLibraryRoot || DEFAULT_EXTERNAL_LIBRARY_ROOT;
+    return path.posix.normalize(root.replace(/\\/g, '/'));
+  }
+
+  private normalizeExternalPath(candidatePath: string): string {
+    return path.posix.normalize(candidatePath.replace(/\\/g, '/'));
+  }
+
+  private isPathUnderExternalRoot(candidatePath: string): boolean {
+    const normalizedRoot = this.getExternalLibraryRoot();
+    const normalized = this.normalizeExternalPath(candidatePath);
+    return normalized === normalizedRoot || normalized.startsWith(`${normalizedRoot}/`);
+  }
+
+  private assertPathUnderExternalRoot(candidatePath: string): void {
+    if (!this.isPathUnderExternalRoot(candidatePath)) {
+      throw new BadRequestException(`Import path must be under ${this.getExternalLibraryRoot()}`);
+    }
+  }
+
+  private async ensureExternalLibraryRootExists(): Promise<void> {
+    const root = this.getExternalLibraryRoot();
+    if (!this.storageRepository.existsSync(root)) {
+      this.storageRepository.mkdirSync(root);
+    }
+  }
+
+  private async getReadableDirectoryStats(directoryPath: string) {
+    const stats = await this.storageRepository.stat(directoryPath);
+    const access = await this.storageRepository.checkFileExists(directoryPath, R_OK);
+    if (!access) {
+      throw new BadRequestException('Directory is not readable');
+    }
+
+    return stats;
   }
 
   async unwatch(id: string) {
@@ -280,13 +384,18 @@ export class LibraryService extends BaseService {
     const validation = new ValidateLibraryImportPathResponseDto();
     validation.importPath = importPath;
 
+    if (!isAbsolute(importPath)) {
+      validation.message = `Import path must be absolute, try ${path.resolve(importPath)}`;
+      return validation;
+    }
+
     if (StorageCore.isImmichPath(importPath)) {
       validation.message = 'Cannot use media upload folder for external libraries';
       return validation;
     }
 
-    if (!isAbsolute(importPath)) {
-      validation.message = `Import path must be absolute, try ${path.resolve(importPath)}`;
+    if (!this.isPathUnderExternalRoot(importPath)) {
+      validation.message = `Import path must be under ${this.getExternalLibraryRoot()}`;
       return validation;
     }
 
@@ -393,7 +502,7 @@ export class LibraryService extends BaseService {
   }
 
   private async processEntity(filePath: string, ownerId: string, libraryId: string) {
-    const assetPath = path.normalize(filePath);
+    const assetPath = this.normalizeExternalPath(filePath);
     const stat = await this.storageRepository.stat(assetPath);
 
     return {
@@ -624,7 +733,7 @@ export class LibraryService extends BaseService {
     for (const importPath of library.importPaths) {
       const validation = await this.validateImportPath(importPath);
       if (validation.isValid) {
-        validImportPaths.push(path.normalize(importPath));
+        validImportPaths.push(this.normalizeExternalPath(importPath));
       } else {
         this.logger.warn(`Skipping invalid import path: ${importPath}. Reason: ${validation.message}`);
       }
