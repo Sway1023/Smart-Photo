@@ -15,8 +15,6 @@ pnpmfileChecksum: sha256-un98do36L0wZyqsjcLozQ3YUadCAn2yz5bXcBbOuyDA=
 
 importers:
 
-  .: {}
-
   .github:
     devDependencies:
       prettier:

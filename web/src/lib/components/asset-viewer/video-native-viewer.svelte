@@ -1,9 +1,7 @@
 <script lang="ts">
-  import FaceEditor from '$lib/components/asset-viewer/face-editor/face-editor.svelte';
   import VideoRemoteViewer from '$lib/components/asset-viewer/video-remote-viewer.svelte';
   import { assetViewerFadeDuration } from '$lib/constants';
   import { castManager } from '$lib/managers/cast-manager.svelte';
-  import { isFaceEditMode } from '$lib/stores/face-edit.svelte';
   import {
     autoPlayVideo,
     loopVideo as loopVideoPreference,
@@ -111,22 +109,12 @@
     }
   };
 
-  let containerWidth = $state(0);
-  let containerHeight = $state(0);
-
-  $effect(() => {
-    if (isFaceEditMode.value) {
-      videoPlayer?.pause();
-    }
-  });
 </script>
 
 {#if showVideo}
   <div
     transition:fade={{ duration: assetViewerFadeDuration }}
     class="flex h-full select-none place-content-center place-items-center"
-    bind:clientWidth={containerWidth}
-    bind:clientHeight={containerHeight}
   >
     {#if castManager.isCasting}
       <div class="place-content-center h-full place-items-center">
@@ -172,9 +160,6 @@
         </div>
       {/if}
 
-      {#if isFaceEditMode.value}
-        <FaceEditor htmlElement={videoPlayer} {containerWidth} {containerHeight} {assetId} />
-      {/if}
     {/if}
   </div>
 {/if}

@@ -4,7 +4,6 @@ import { ActivityTable } from 'src/schema/tables/activity.table';
 import { AssetTable } from 'src/schema/tables/asset.table';
 import { PartnerTable } from 'src/schema/tables/partner.table';
 import { AlbumFactory } from 'test/factories/album.factory';
-import { AssetFaceFactory } from 'test/factories/asset-face.factory';
 import { AssetFactory } from 'test/factories/asset.factory';
 import { MemoryFactory } from 'test/factories/memory.factory';
 import { SharedLinkFactory } from 'test/factories/shared-link.factory';
@@ -32,34 +31,6 @@ export const getForStorageTemplate = (asset: ReturnType<AssetFactory['build']>) 
     isEdited: asset.isEdited,
   };
 };
-
-export const getAsDetectedFace = (face: ReturnType<AssetFaceFactory['build']>) => ({
-  faces: [
-    {
-      boundingBox: {
-        x1: face.boundingBoxX1,
-        y1: face.boundingBoxY1,
-        x2: face.boundingBoxX2,
-        y2: face.boundingBoxY2,
-      },
-      embedding: '[1, 2, 3, 4]',
-      score: 0.2,
-    },
-  ],
-  imageHeight: face.imageHeight,
-  imageWidth: face.imageWidth,
-});
-
-export const getForFacialRecognitionJob = (
-  face: ReturnType<AssetFaceFactory['build']>,
-  asset: Pick<Selectable<AssetTable>, 'ownerId' | 'visibility' | 'fileCreatedAt'> | null,
-) => ({
-  ...face,
-  asset: asset
-    ? { ownerId: asset.ownerId, visibility: asset.visibility, fileCreatedAt: asset.fileCreatedAt.toISOString() }
-    : null,
-  faceSearch: { faceId: face.id, embedding: '[1, 2, 3, 4]' },
-});
 
 export const getDehydrated = <T extends Record<string, unknown>>(entity: T) => {
   const copiedEntity = structuredClone(entity);
@@ -95,10 +66,6 @@ export const getForActivity = (activity: Selectable<ActivityTable> & { user: Ret
 export const getForAsset = (asset: ReturnType<AssetFactory['build']>) => {
   return {
     ...asset,
-    faces: asset.faces.map((face) => ({
-      ...getDehydrated(face),
-      person: face.person ? getDehydrated(face.person) : null,
-    })),
     owner: getDehydrated(asset.owner),
     stack: asset.stack
       ? { ...getDehydrated(asset.stack), assets: asset.stack.assets.map((asset) => getDehydrated(asset)) }
@@ -140,7 +107,6 @@ export const getForMetadataExtraction = (asset: ReturnType<AssetFactory['build']
   type: asset.type,
   width: asset.width,
   height: asset.height,
-  faces: asset.faces.map((face) => getDehydrated(face)),
   files: asset.files.map((file) => getDehydrated(file)),
 });
 
@@ -155,19 +121,6 @@ export const getForGenerateThumbnail = (asset: ReturnType<AssetFactory['build']>
   files: asset.files.map((file) => getDehydrated(file)),
   exifInfo: getDehydrated(asset.exifInfo),
   edits: asset.edits.map(({ action, parameters }) => ({ action, parameters })) as AssetEditActionItem[],
-});
-
-export const getForAssetFace = (face: ReturnType<AssetFaceFactory['build']>) => ({
-  ...face,
-  person: face.person ? getDehydrated(face.person) : null,
-});
-
-export const getForDetectedFaces = (asset: ReturnType<AssetFactory['build']>) => ({
-  id: asset.id,
-  visibility: asset.visibility,
-  exifInfo: getDehydrated(asset.exifInfo),
-  faces: asset.faces.map((face) => getDehydrated(face)),
-  files: asset.files.map((file) => getDehydrated(file)),
 });
 
 export const getForSidecarWrite = (asset: ReturnType<AssetFactory['build']>) => ({

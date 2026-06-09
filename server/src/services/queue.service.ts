@@ -42,90 +42,6 @@ const asNightlyTasksCron = (config: SystemConfig) => {
 export class QueueService extends BaseService {
   private services: ClassConstructor<unknown>[] = [];
   private nightlyJobsLock = false;
-  private readonly disabledQueues = new Set<QueueName>([
-    QueueName.Workflow,
-    QueueName.FaceDetection,
-    QueueName.FacialRecognition,
-    QueueName.SmartSearch,
-    QueueName.DuplicateDetection,
-    QueueName.Ocr,
-  ]);
-
-  @OnJob({ name: JobName.WorkflowRun, queue: QueueName.Workflow })
-  async skipWorkflowRun(): Promise<JobStatus> {
-    this.logger.warn('Skipping WorkflowRun job because workflows are disabled in this build');
-    return JobStatus.Skipped;
-  }
-
-  private skipMlJob(name: string): JobStatus {
-    this.logger.warn(`Skipping ${name} job because machine learning features are disabled in this build`);
-    return JobStatus.Skipped;
-  }
-
-  private skipPersonJob(name: string): JobStatus {
-    this.logger.warn(`Skipping ${name} job because person features are disabled in this build`);
-    return JobStatus.Skipped;
-  }
-
-  @OnJob({ name: JobName.SmartSearchQueueAll, queue: QueueName.SmartSearch })
-  async skipSmartSearchQueueAll(): Promise<JobStatus> {
-    return this.skipMlJob(JobName.SmartSearchQueueAll);
-  }
-
-  @OnJob({ name: JobName.SmartSearch, queue: QueueName.SmartSearch })
-  async skipSmartSearch(): Promise<JobStatus> {
-    return this.skipMlJob(JobName.SmartSearch);
-  }
-
-  @OnJob({ name: JobName.AssetDetectDuplicatesQueueAll, queue: QueueName.DuplicateDetection })
-  async skipDuplicateDetectionQueueAll(): Promise<JobStatus> {
-    return this.skipMlJob(JobName.AssetDetectDuplicatesQueueAll);
-  }
-
-  @OnJob({ name: JobName.AssetDetectDuplicates, queue: QueueName.DuplicateDetection })
-  async skipDuplicateDetection(): Promise<JobStatus> {
-    return this.skipMlJob(JobName.AssetDetectDuplicates);
-  }
-
-  @OnJob({ name: JobName.OcrQueueAll, queue: QueueName.Ocr })
-  async skipOcrQueueAll(): Promise<JobStatus> {
-    return this.skipMlJob(JobName.OcrQueueAll);
-  }
-
-  @OnJob({ name: JobName.Ocr, queue: QueueName.Ocr })
-  async skipOcr(): Promise<JobStatus> {
-    return this.skipMlJob(JobName.Ocr);
-  }
-
-  @OnJob({ name: JobName.PersonCleanup, queue: QueueName.BackgroundTask })
-  async skipPersonCleanup(): Promise<JobStatus> {
-    return this.skipPersonJob(JobName.PersonCleanup);
-  }
-
-  @OnJob({ name: JobName.AssetDetectFacesQueueAll, queue: QueueName.FaceDetection })
-  async skipDetectFacesQueueAll(): Promise<JobStatus> {
-    return this.skipPersonJob(JobName.AssetDetectFacesQueueAll);
-  }
-
-  @OnJob({ name: JobName.AssetDetectFaces, queue: QueueName.FaceDetection })
-  async skipDetectFaces(): Promise<JobStatus> {
-    return this.skipPersonJob(JobName.AssetDetectFaces);
-  }
-
-  @OnJob({ name: JobName.FacialRecognitionQueueAll, queue: QueueName.FacialRecognition })
-  async skipFacialRecognitionQueueAll(): Promise<JobStatus> {
-    return this.skipPersonJob(JobName.FacialRecognitionQueueAll);
-  }
-
-  @OnJob({ name: JobName.FacialRecognition, queue: QueueName.FacialRecognition })
-  async skipFacialRecognition(): Promise<JobStatus> {
-    return this.skipPersonJob(JobName.FacialRecognition);
-  }
-
-  @OnJob({ name: JobName.PersonFileMigration, queue: QueueName.Migration })
-  async skipPersonFileMigration(): Promise<JobStatus> {
-    return this.skipPersonJob(JobName.PersonFileMigration);
-  }
 
   @OnEvent({ name: 'ConfigInit' })
   async onConfigInit({ newConfig: config }: ArgOf<'ConfigInit'>) {
@@ -222,8 +138,7 @@ export class QueueService extends BaseService {
   }
 
   async getAll(_auth: AuthDto): Promise<QueueResponseDto[]> {
-    const queues = Object.values(QueueName).filter((name) => !this.disabledQueues.has(name));
-    return Promise.all(queues.map((name) => this.getByName(name)));
+    return Promise.all(Object.values(QueueName).map((name) => this.getByName(name)));
   }
 
   async getAllLegacy(auth: AuthDto): Promise<QueuesResponseLegacyDto> {
@@ -290,14 +205,6 @@ export class QueueService extends BaseService {
         return this.jobRepository.queue({ name: JobName.FileMigrationQueueAll });
       }
 
-      case QueueName.SmartSearch: {
-        return this.jobRepository.queue({ name: JobName.SmartSearchQueueAll, data: { force } });
-      }
-
-      case QueueName.DuplicateDetection: {
-        return this.jobRepository.queue({ name: JobName.AssetDetectDuplicatesQueueAll, data: { force } });
-      }
-
       case QueueName.MetadataExtraction: {
         return this.jobRepository.queue({ name: JobName.AssetExtractMetadataQueueAll, data: { force } });
       }
@@ -318,10 +225,6 @@ export class QueueService extends BaseService {
         return this.jobRepository.queue({ name: JobName.DatabaseBackup, data: { force } });
       }
 
-      case QueueName.Ocr: {
-        return this.jobRepository.queue({ name: JobName.OcrQueueAll, data: { force } });
-      }
-
       default: {
         throw new BadRequestException(`Invalid job name: ${name}`);
       }
@@ -329,12 +232,7 @@ export class QueueService extends BaseService {
   }
 
   private isConcurrentQueue(name: QueueName): name is ConcurrentQueueName {
-    return ![
-      QueueName.FacialRecognition,
-      QueueName.StorageTemplateMigration,
-      QueueName.DuplicateDetection,
-      QueueName.BackupDatabase,
-    ].includes(name);
+    return ![QueueName.StorageTemplateMigration, QueueName.BackupDatabase].includes(name);
   }
 
   async handleNightlyJobs() {

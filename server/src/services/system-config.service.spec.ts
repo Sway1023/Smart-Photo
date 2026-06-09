@@ -29,9 +29,7 @@ const partialConfig = {
 const updatedConfig = Object.freeze<SystemConfig>({
   job: {
     [QueueName.BackgroundTask]: { concurrency: 5 },
-    [QueueName.SmartSearch]: { concurrency: 2 },
     [QueueName.MetadataExtraction]: { concurrency: 5 },
-    [QueueName.FaceDetection]: { concurrency: 2 },
     [QueueName.Search]: { concurrency: 5 },
     [QueueName.Sidecar]: { concurrency: 5 },
     [QueueName.Library]: { concurrency: 5 },
@@ -39,8 +37,6 @@ const updatedConfig = Object.freeze<SystemConfig>({
     [QueueName.ThumbnailGeneration]: { concurrency: 3 },
     [QueueName.VideoConversion]: { concurrency: 1 },
     [QueueName.Notification]: { concurrency: 5 },
-    [QueueName.Ocr]: { concurrency: 1 },
-    [QueueName.Workflow]: { concurrency: 5 },
     [QueueName.Editor]: { concurrency: 2 },
   },
   backup: {
@@ -94,24 +90,6 @@ const updatedConfig = Object.freeze<SystemConfig>({
       enabled: true,
       modelName: 'ViT-B-32__openai',
     },
-    duplicateDetection: {
-      enabled: true,
-      maxDistance: 0.01,
-    },
-    facialRecognition: {
-      enabled: true,
-      modelName: 'buffalo_l',
-      minScore: 0.7,
-      maxDistance: 0.5,
-      minFaces: 3,
-    },
-    ocr: {
-      enabled: true,
-      modelName: 'PP-OCRv5_mobile',
-      minDetectionScore: 0.5,
-      minRecognitionScore: 0.8,
-      maxResolution: 736,
-    },
   },
   map: {
     enabled: true,
@@ -121,7 +99,6 @@ const updatedConfig = Object.freeze<SystemConfig>({
   nightlyTasks: {
     startTime: '00:00',
     databaseCleanup: true,
-    clusterNewFaces: true,
     missingThumbnails: true,
     generateMemories: true,
     syncQuotaUsage: true,

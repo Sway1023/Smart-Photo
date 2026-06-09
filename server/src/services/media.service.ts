@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { SystemConfig } from 'src/config';
-import { FACE_THUMBNAIL_SIZE, JOBS_ASSET_PAGINATION_SIZE } from 'src/constants';
+import { JOBS_ASSET_PAGINATION_SIZE } from 'src/constants';
 import { ImagePathOptions, StorageCore, ThumbnailPathEntity } from 'src/cores/storage.core';
 import { AssetFile } from 'src/database';
 import { OnEvent, OnJob } from 'src/decorators';
-import { AssetEditAction, CropParameters } from 'src/dtos/editing.dto';
+import { AssetEditAction } from 'src/dtos/editing.dto';
 import { SystemConfigFFmpegDto } from 'src/dtos/system-config.dto';
 import {
   AssetFileType,
@@ -26,13 +26,11 @@ import {
   VideoContainer,
 } from 'src/enum';
 import { AssetJobRepository } from 'src/repositories/asset-job.repository';
-import { BoundingBox } from 'src/repositories/machine-learning.repository';
 import { BaseService } from 'src/services/base.service';
 import {
   AudioStreamInfo,
   DecodeToBufferOptions,
   GenerateThumbnailOptions,
-  ImageDimensions,
   JobItem,
   JobOf,
   VideoFormat,
@@ -40,10 +38,8 @@ import {
   VideoStreamInfo,
 } from 'src/types';
 import { getAssetFile, getDimensions } from 'src/utils/asset.util';
-import { checkFaceVisibility, checkOcrVisibility } from 'src/utils/editor';
 import { BaseConfig, ThumbnailConfig } from 'src/utils/media';
 import { mimeTypes } from 'src/utils/mime-types';
-import { clamp, isFaceImportEnabled, isFacialRecognitionEnabled } from 'src/utils/misc';
 import { getOutputDimensions } from 'src/utils/transform';
 
 interface UpsertFileOptions {
@@ -94,26 +90,6 @@ export class MediaService extends BaseService {
 
     await queueAll();
 
-    const people = this.personRepository.getAll(force ? undefined : { thumbnailPath: '' });
-
-    for await (const person of people) {
-      if (!person.faceAssetId) {
-        const face = await this.personRepository.getRandomFace(person.id);
-        if (!face) {
-          continue;
-        }
-
-        await this.personRepository.update({ id: person.id, faceAssetId: face.id });
-      }
-
-      jobs.push({ name: JobName.PersonGenerateThumbnail, data: { id: person.id } });
-      if (jobs.length >= JOBS_ASSET_PAGINATION_SIZE) {
-        await queueAll();
-      }
-    }
-
-    await queueAll();
-
     return JobStatus.Success;
   }
 
@@ -137,17 +113,6 @@ export class MediaService extends BaseService {
 
     await this.jobRepository.queueAll(jobs);
     jobs = [];
-
-    for await (const person of this.personRepository.getAll()) {
-      jobs.push({ name: JobName.PersonFileMigration, data: { id: person.id } });
-
-      if (jobs.length === JOBS_ASSET_PAGINATION_SIZE) {
-        await this.jobRepository.queueAll(jobs);
-        jobs = [];
-      }
-    }
-
-    await this.jobRepository.queueAll(jobs);
 
     return JobStatus.Success;
   }
@@ -402,107 +367,6 @@ export class MediaService extends BaseService {
       files: fullsizeFile ? [previewFile, thumbnailFile, fullsizeFile] : [previewFile, thumbnailFile],
       thumbhash: outputs[0] as Buffer,
       fullsizeDimensions,
-    };
-  }
-
-  @OnJob({ name: JobName.PersonGenerateThumbnail, queue: QueueName.ThumbnailGeneration })
-  async handleGeneratePersonThumbnail({ id }: JobOf<JobName.PersonGenerateThumbnail>): Promise<JobStatus> {
-    const { machineLearning, metadata, image } = await this.getConfig({ withCache: true });
-    if (!isFacialRecognitionEnabled(machineLearning) && !isFaceImportEnabled(metadata)) {
-      return JobStatus.Skipped;
-    }
-
-    const data = await this.personRepository.getDataForThumbnailGenerationJob(id);
-    if (!data) {
-      this.logger.error(`Could not generate person thumbnail for ${id}: missing data`);
-      return JobStatus.Failed;
-    }
-
-    const { ownerId, x1, y1, x2, y2, oldWidth, oldHeight, exifOrientation, previewPath, originalPath } = data;
-    let inputImage: string | Buffer;
-    if (data.type === AssetType.Video) {
-      if (!previewPath) {
-        this.logger.error(`Could not generate person thumbnail for video ${id}: missing preview path`);
-        return JobStatus.Failed;
-      }
-      inputImage = previewPath;
-    } else if (image.extractEmbedded && mimeTypes.isRaw(originalPath)) {
-      const extracted = await this.extractImage(originalPath, image.preview.size);
-      inputImage = extracted ? extracted.buffer : originalPath;
-    } else {
-      inputImage = originalPath;
-    }
-
-    const { data: decodedImage, info } = await this.mediaRepository.decodeImage(inputImage, {
-      colorspace: image.colorspace,
-      processInvalidImages: process.env.IMMICH_PROCESS_INVALID_IMAGES === 'true',
-      // if this is an extracted image, it may not have orientation metadata
-      orientation: Buffer.isBuffer(inputImage) && exifOrientation ? Number(exifOrientation) : undefined,
-    });
-
-    const thumbnailPath = StorageCore.getPersonThumbnailPath({ id, ownerId });
-    this.storageCore.ensureFolders(thumbnailPath);
-
-    const thumbnailOptions: GenerateThumbnailOptions = {
-      colorspace: image.colorspace,
-      format: ImageFormat.Jpeg,
-      raw: info,
-      quality: image.thumbnail.quality,
-      progressive: false,
-      processInvalidImages: false,
-      size: FACE_THUMBNAIL_SIZE,
-      edits: [
-        {
-          action: AssetEditAction.Crop,
-          parameters: this.getCrop(
-            { old: { width: oldWidth, height: oldHeight }, new: { width: info.width, height: info.height } },
-            { x1, y1, x2, y2 },
-          ),
-        },
-      ],
-    };
-
-    await this.mediaRepository.generateThumbnail(decodedImage, thumbnailOptions, thumbnailPath);
-    await this.personRepository.update({ id, thumbnailPath });
-
-    return JobStatus.Success;
-  }
-
-  private getCrop(
-    dims: { old: ImageDimensions; new: ImageDimensions },
-    { x1, y1, x2, y2 }: BoundingBox,
-  ): CropParameters {
-    // face bounding boxes can spill outside the image dimensions
-    const clampedX1 = clamp(x1, 0, dims.old.width);
-    const clampedY1 = clamp(y1, 0, dims.old.height);
-    const clampedX2 = clamp(x2, 0, dims.old.width);
-    const clampedY2 = clamp(y2, 0, dims.old.height);
-
-    const widthScale = dims.new.width / dims.old.width;
-    const heightScale = dims.new.height / dims.old.height;
-
-    const halfWidth = (widthScale * (clampedX2 - clampedX1)) / 2;
-    const halfHeight = (heightScale * (clampedY2 - clampedY1)) / 2;
-
-    const middleX = Math.round(widthScale * clampedX1 + halfWidth);
-    const middleY = Math.round(heightScale * clampedY1 + halfHeight);
-
-    // zoom out 10%
-    const targetHalfSize = Math.floor(Math.max(halfWidth, halfHeight) * 1.1);
-
-    // get the longest distance from the center of the image without overflowing
-    const newHalfSize = Math.min(
-      middleX - Math.max(0, middleX - targetHalfSize),
-      middleY - Math.max(0, middleY - targetHalfSize),
-      Math.min(dims.new.width - 1, middleX + targetHalfSize) - middleX,
-      Math.min(dims.new.height - 1, middleY + targetHalfSize) - middleY,
-    );
-
-    return {
-      x: middleX - newHalfSize,
-      y: middleY - newHalfSize,
-      width: newHalfSize * 2,
-      height: newHalfSize * 2,
     };
   }
 
@@ -880,26 +744,6 @@ export class MediaService extends BaseService {
     }
 
     const generated = asset.edits.length > 0 ? await this.generateImageThumbnails(asset, config, true) : undefined;
-
-    const crop = asset.edits.find((e) => e.action === AssetEditAction.Crop);
-    const cropBox = crop
-      ? {
-          x1: crop.parameters.x,
-          y1: crop.parameters.y,
-          x2: crop.parameters.x + crop.parameters.width,
-          y2: crop.parameters.y + crop.parameters.height,
-        }
-      : undefined;
-
-    const originalDimensions = getDimensions(asset.exifInfo!);
-    const assetFaces = await this.personRepository.getFaces(asset.id, {});
-    const ocrData = await this.ocrRepository.getByAssetId(asset.id, {});
-
-    const faceStatuses = checkFaceVisibility(assetFaces, originalDimensions, cropBox);
-    await this.personRepository.updateVisibility(faceStatuses.visible, faceStatuses.hidden);
-
-    const ocrStatuses = checkOcrVisibility(ocrData, originalDimensions, cropBox);
-    await this.ocrRepository.updateOcrVisibilities(asset.id, ocrStatuses.visible, ocrStatuses.hidden);
 
     return generated;
   }

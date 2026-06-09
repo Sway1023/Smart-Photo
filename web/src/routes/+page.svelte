@@ -22,7 +22,7 @@
 
 <AuthPageLayout>
   <div class="flex flex-col place-items-center text-center gap-12">
-    <Heading size="large" color="primary" tag="h1">{$t('welcome_to_immich')}</Heading>
+    <Heading size="large" color="primary" tag="h1">Photo</Heading>
     <Stack>
       <Button href={Route.register()} size="large" shape="round">
         <span class="px-2 font-semibold">{$t('getting_started')}</span>

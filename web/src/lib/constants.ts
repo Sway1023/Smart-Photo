@@ -12,7 +12,6 @@ export enum AssetAction {
   REMOVE_ASSET_FROM_STACK = 'remove-asset-from-stack',
   SET_VISIBILITY_LOCKED = 'set-visibility-locked',
   SET_VISIBILITY_TIMELINE = 'set-visibility-timeline',
-  SET_PERSON_FEATURED_PHOTO = 'set-person-featured-photo',
   RATING = 'rating',
 }
 
@@ -90,13 +89,11 @@ export const fallbackLocale = {
 };
 
 export enum QueryType {
-  SMART = 'smart',
   METADATA = 'metadata',
   DESCRIPTION = 'description',
-  OCR = 'ocr',
 }
 
-export const validQueryTypes = new Set([QueryType.SMART, QueryType.METADATA, QueryType.DESCRIPTION, QueryType.OCR]);
+export const validQueryTypes = new Set([QueryType.METADATA, QueryType.DESCRIPTION]);
 
 export const locales = [
   { code: 'af-ZA', name: 'Afrikaans (South Africa)' },

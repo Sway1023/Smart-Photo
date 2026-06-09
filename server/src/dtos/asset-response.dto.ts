@@ -1,21 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Selectable, ShallowDehydrateObject } from 'kysely';
-import { AssetFace, AssetFile, Exif, Stack, Tag, User } from 'src/database';
+import { AssetFile, Exif, Stack, Tag, User } from 'src/database';
 import { HistoryBuilder, Property } from 'src/decorators';
 import { AuthDto } from 'src/dtos/auth.dto';
 import { AssetEditActionItem } from 'src/dtos/editing.dto';
 import { ExifResponseDto, mapExif } from 'src/dtos/exif.dto';
-import {
-  AssetFaceWithoutPersonResponseDto,
-  PersonWithFacesResponseDto,
-  mapFacesWithoutPerson,
-  mapPerson,
-} from 'src/dtos/person.dto';
 import { TagResponseDto, mapTag } from 'src/dtos/tag.dto';
 import { UserResponseDto, mapUser } from 'src/dtos/user.dto';
 import { AssetStatus, AssetType, AssetVisibility } from 'src/enum';
-import { ImageDimensions, MaybeDehydrated } from 'src/types';
-import { getDimensions } from 'src/utils/asset.util';
+import { MaybeDehydrated } from 'src/types';
 import { hexOrBufferToBase64 } from 'src/utils/bytes';
 import { asDateString } from 'src/utils/date';
 import { mimeTypes } from 'src/utils/mime-types';
@@ -120,12 +113,6 @@ export class AssetResponseDto extends SanitizedAssetResponseDto {
   // Description lives on schema to avoid duplication
   @ApiPropertyOptional({ description: undefined })
   tags?: TagResponseDto[];
-  // Description lives on schema to avoid duplication
-  @ApiPropertyOptional({ description: undefined })
-  people?: PersonWithFacesResponseDto[];
-  // Description lives on schema to avoid duplication
-  @ApiPropertyOptional({ description: undefined })
-  unassignedFaces?: AssetFaceWithoutPersonResponseDto[];
   @ApiProperty({ description: 'Base64 encoded SHA1 hash' })
   checksum!: string;
   // Description lives on schema to avoid duplication
@@ -154,7 +141,6 @@ export type MapAsset = {
   duration: string | null;
   edits?: ShallowDehydrateObject<AssetEditActionItem>[];
   exifInfo?: ShallowDehydrateObject<Selectable<Exif>> | null;
-  faces?: ShallowDehydrateObject<AssetFace>[];
   fileCreatedAt: Date;
   fileModifiedAt: Date;
   files?: ShallowDehydrateObject<AssetFile>[];
@@ -196,35 +182,6 @@ export type AssetMapOptions = {
   auth?: AuthDto;
 };
 
-const peopleWithFaces = (
-  faces?: MaybeDehydrated<AssetFace>[],
-  edits?: AssetEditActionItem[],
-  assetDimensions?: ImageDimensions,
-): PersonWithFacesResponseDto[] => {
-  if (!faces) {
-    return [];
-  }
-
-  const peopleFaces: Map<string, PersonWithFacesResponseDto> = new Map();
-
-  for (const face of faces) {
-    if (!face.person) {
-      continue;
-    }
-
-    if (!peopleFaces.has(face.person.id)) {
-      peopleFaces.set(face.person.id, {
-        ...mapPerson(face.person),
-        faces: [],
-      });
-    }
-    const mappedFace = mapFacesWithoutPerson(face, edits, assetDimensions);
-    peopleFaces.get(face.person.id)!.faces.push(mappedFace);
-  }
-
-  return [...peopleFaces.values()];
-};
-
 const mapStack = (entity: { stack?: Stack | null }) => {
   if (!entity.stack) {
     return null;
@@ -256,8 +213,6 @@ export function mapAsset(entity: MaybeDehydrated<MapAsset>, options: AssetMapOpt
     return sanitizedAssetResponse as AssetResponseDto;
   }
 
-  const assetDimensions = entity.exifInfo ? getDimensions(entity.exifInfo) : undefined;
-
   return {
     id: entity.id,
     createdAt: asDateString(entity.createdAt),
@@ -283,10 +238,6 @@ export function mapAsset(entity: MaybeDehydrated<MapAsset>, options: AssetMapOpt
     exifInfo: entity.exifInfo ? mapExif(entity.exifInfo) : undefined,
     livePhotoVideoId: entity.livePhotoVideoId,
     tags: entity.tags?.map((tag) => mapTag(tag)),
-    people: peopleWithFaces(entity.faces, entity.edits, assetDimensions),
-    unassignedFaces: entity.faces
-      ?.filter((face) => !face.person)
-      .map((face) => mapFacesWithoutPerson(face, entity.edits, assetDimensions)),
     checksum: hexOrBufferToBase64(entity.checksum)!,
     stack: withStack ? mapStack(entity) : undefined,
     isOffline: entity.isOffline,

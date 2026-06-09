@@ -15,7 +15,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { SystemConfig } from 'src/config';
-import { CLIPConfig, DuplicateDetectionConfig, FacialRecognitionConfig, OcrConfig } from 'src/dtos/model-config.dto';
+import { CLIPConfig } from 'src/dtos/model-config.dto';
 import {
   AudioCodec,
   CQMode,
@@ -195,12 +195,6 @@ class SystemConfigJobDto implements Record<ConcurrentQueueName, JobSettingsDto> 
   @ValidateNested()
   @IsObject()
   @Type(() => JobSettingsDto)
-  [QueueName.SmartSearch]!: JobSettingsDto;
-
-  @ApiProperty({ type: JobSettingsDto, description: undefined })
-  @ValidateNested()
-  @IsObject()
-  @Type(() => JobSettingsDto)
   [QueueName.Migration]!: JobSettingsDto;
 
   @ApiProperty({ type: JobSettingsDto, description: undefined })
@@ -219,18 +213,6 @@ class SystemConfigJobDto implements Record<ConcurrentQueueName, JobSettingsDto> 
   @ValidateNested()
   @IsObject()
   @Type(() => JobSettingsDto)
-  [QueueName.FaceDetection]!: JobSettingsDto;
-
-  @ApiProperty({ type: JobSettingsDto, description: undefined })
-  @ValidateNested()
-  @IsObject()
-  @Type(() => JobSettingsDto)
-  [QueueName.Ocr]!: JobSettingsDto;
-
-  @ApiProperty({ type: JobSettingsDto, description: undefined })
-  @ValidateNested()
-  @IsObject()
-  @Type(() => JobSettingsDto)
   [QueueName.Sidecar]!: JobSettingsDto;
 
   @ApiProperty({ type: JobSettingsDto, description: undefined })
@@ -244,12 +226,6 @@ class SystemConfigJobDto implements Record<ConcurrentQueueName, JobSettingsDto> 
   @IsObject()
   @Type(() => JobSettingsDto)
   [QueueName.Notification]!: JobSettingsDto;
-
-  @ApiProperty({ type: JobSettingsDto, description: undefined })
-  @ValidateNested()
-  @IsObject()
-  @Type(() => JobSettingsDto)
-  [QueueName.Workflow]!: JobSettingsDto;
 
   @ApiProperty({ type: JobSettingsDto, description: undefined })
   @ValidateNested()
@@ -325,20 +301,6 @@ class SystemConfigMachineLearningDto {
   @IsObject()
   clip!: CLIPConfig;
 
-  @Type(() => DuplicateDetectionConfig)
-  @ValidateNested()
-  @IsObject()
-  duplicateDetection!: DuplicateDetectionConfig;
-
-  @Type(() => FacialRecognitionConfig)
-  @ValidateNested()
-  @IsObject()
-  facialRecognition!: FacialRecognitionConfig;
-
-  @Type(() => OcrConfig)
-  @ValidateNested()
-  @IsObject()
-  ocr!: OcrConfig;
 }
 
 enum MapTheme {
@@ -378,9 +340,6 @@ class SystemConfigNightlyTasksDto {
 
   @ValidateBoolean({ description: 'Missing thumbnails' })
   missingThumbnails!: boolean;
-
-  @ValidateBoolean({ description: 'Cluster new faces' })
-  clusterNewFaces!: boolean;
 
   @ValidateBoolean({ description: 'Generate memories' })
   generateMemories!: boolean;

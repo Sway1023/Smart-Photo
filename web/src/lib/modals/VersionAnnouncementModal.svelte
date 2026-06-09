@@ -23,11 +23,7 @@
   <FormatMessage key="version_announcement_message">
     {#snippet children({ tag, message })}
       {#if tag === 'link'}
-        <span class="font-medium underline">
-          <a href="https://github.com/immich-app/immich/releases/latest" target="_blank" rel="noopener noreferrer">
-            {message}
-          </a>
-        </span>
+        <span class="font-medium">{message}</span>
       {:else if tag === 'code'}
         <code>{message}</code>
       {/if}

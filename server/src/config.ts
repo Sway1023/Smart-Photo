@@ -63,24 +63,6 @@ export type SystemConfig = {
       enabled: boolean;
       modelName: string;
     };
-    duplicateDetection: {
-      enabled: boolean;
-      maxDistance: number;
-    };
-    facialRecognition: {
-      enabled: boolean;
-      modelName: string;
-      minScore: number;
-      minFaces: number;
-      maxDistance: number;
-    };
-    ocr: {
-      enabled: boolean;
-      modelName: string;
-      minDetectionScore: number;
-      minRecognitionScore: number;
-      maxResolution: number;
-    };
   };
   map: {
     enabled: boolean;
@@ -137,7 +119,6 @@ export type SystemConfig = {
     startTime: string;
     databaseCleanup: boolean;
     missingThumbnails: boolean;
-    clusterNewFaces: boolean;
     generateMemories: boolean;
     syncQuotaUsage: boolean;
   };
@@ -224,9 +205,7 @@ export const defaults = Object.freeze<SystemConfig>({
   },
   job: {
     [QueueName.BackgroundTask]: { concurrency: 5 },
-    [QueueName.SmartSearch]: { concurrency: 2 },
     [QueueName.MetadataExtraction]: { concurrency: 5 },
-    [QueueName.FaceDetection]: { concurrency: 2 },
     [QueueName.Search]: { concurrency: 5 },
     [QueueName.Sidecar]: { concurrency: 5 },
     [QueueName.Library]: { concurrency: 5 },
@@ -234,8 +213,6 @@ export const defaults = Object.freeze<SystemConfig>({
     [QueueName.ThumbnailGeneration]: { concurrency: 3 },
     [QueueName.VideoConversion]: { concurrency: 1 },
     [QueueName.Notification]: { concurrency: 5 },
-    [QueueName.Ocr]: { concurrency: 1 },
-    [QueueName.Workflow]: { concurrency: 5 },
     [QueueName.Editor]: { concurrency: 2 },
   },
   logging: {
@@ -253,24 +230,6 @@ export const defaults = Object.freeze<SystemConfig>({
     clip: {
       enabled: true,
       modelName: 'ViT-B-32__openai',
-    },
-    duplicateDetection: {
-      enabled: true,
-      maxDistance: 0.01,
-    },
-    facialRecognition: {
-      enabled: true,
-      modelName: 'buffalo_l',
-      minScore: 0.7,
-      maxDistance: 0.5,
-      minFaces: 3,
-    },
-    ocr: {
-      enabled: true,
-      modelName: 'PP-OCRv5_mobile',
-      minDetectionScore: 0.5,
-      minRecognitionScore: 0.8,
-      maxResolution: 736,
     },
   },
   map: {
@@ -345,7 +304,6 @@ export const defaults = Object.freeze<SystemConfig>({
     generateMemories: true,
     syncQuotaUsage: true,
     missingThumbnails: true,
-    clusterNewFaces: true,
   },
   trash: {
     enabled: true,

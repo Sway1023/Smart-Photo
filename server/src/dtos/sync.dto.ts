@@ -388,80 +388,6 @@ export class SyncStackDeleteV1 {
 }
 
 @ExtraModel()
-export class SyncPersonV1 {
-  @ApiProperty({ description: 'Person ID' })
-  id!: string;
-  @ApiProperty({ description: 'Created at' })
-  createdAt!: Date;
-  @ApiProperty({ description: 'Updated at' })
-  updatedAt!: Date;
-  @ApiProperty({ description: 'Owner ID' })
-  ownerId!: string;
-  @ApiProperty({ description: 'Person name' })
-  name!: string;
-  @ApiProperty({ description: 'Birth date' })
-  birthDate!: Date | null;
-  @ApiProperty({ description: 'Is hidden' })
-  isHidden!: boolean;
-  @ApiProperty({ description: 'Is favorite' })
-  isFavorite!: boolean;
-  @ApiProperty({ description: 'Color' })
-  color!: string | null;
-  @ApiProperty({ description: 'Face asset ID' })
-  faceAssetId!: string | null;
-}
-
-@ExtraModel()
-export class SyncPersonDeleteV1 {
-  @ApiProperty({ description: 'Person ID' })
-  personId!: string;
-}
-
-@ExtraModel()
-export class SyncAssetFaceV1 {
-  @ApiProperty({ description: 'Asset face ID' })
-  id!: string;
-  @ApiProperty({ description: 'Asset ID' })
-  assetId!: string;
-  @ApiProperty({ description: 'Person ID' })
-  personId!: string | null;
-  @ApiProperty({ type: 'integer' })
-  imageWidth!: number;
-  @ApiProperty({ type: 'integer' })
-  imageHeight!: number;
-  @ApiProperty({ type: 'integer' })
-  boundingBoxX1!: number;
-  @ApiProperty({ type: 'integer' })
-  boundingBoxY1!: number;
-  @ApiProperty({ type: 'integer' })
-  boundingBoxX2!: number;
-  @ApiProperty({ type: 'integer' })
-  boundingBoxY2!: number;
-  @ApiProperty({ description: 'Source type' })
-  sourceType!: string;
-}
-
-@ExtraModel()
-export class SyncAssetFaceV2 extends SyncAssetFaceV1 {
-  @ApiProperty({ description: 'Face deleted at' })
-  deletedAt!: Date | null;
-  @ApiProperty({ description: 'Is the face visible in the asset' })
-  isVisible!: boolean;
-}
-
-export function syncAssetFaceV2ToV1(faceV2: SyncAssetFaceV2): SyncAssetFaceV1 {
-  const { deletedAt: _, isVisible: __, ...faceV1 } = faceV2;
-
-  return faceV1;
-}
-
-@ExtraModel()
-export class SyncAssetFaceDeleteV1 {
-  @ApiProperty({ description: 'Asset face ID' })
-  assetFaceId!: string;
-}
-
-@ExtraModel()
 export class SyncUserMetadataV1 {
   @ApiProperty({ description: 'User ID' })
   userId!: string;
@@ -529,11 +455,6 @@ export type SyncItem = {
   [SyncEntityType.PartnerStackBackfillV1]: SyncStackV1;
   [SyncEntityType.PartnerStackDeleteV1]: SyncStackDeleteV1;
   [SyncEntityType.PartnerStackV1]: SyncStackV1;
-  [SyncEntityType.PersonV1]: SyncPersonV1;
-  [SyncEntityType.PersonDeleteV1]: SyncPersonDeleteV1;
-  [SyncEntityType.AssetFaceV1]: SyncAssetFaceV1;
-  [SyncEntityType.AssetFaceV2]: SyncAssetFaceV2;
-  [SyncEntityType.AssetFaceDeleteV1]: SyncAssetFaceDeleteV1;
   [SyncEntityType.UserMetadataV1]: SyncUserMetadataV1;
   [SyncEntityType.UserMetadataDeleteV1]: SyncUserMetadataDeleteV1;
   [SyncEntityType.SyncAckV1]: SyncAckV1;

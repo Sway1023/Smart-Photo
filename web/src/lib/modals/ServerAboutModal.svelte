@@ -13,16 +13,17 @@
   }
 
   let { onClose, info, versions }: Props = $props();
+  const showSourceDetails = $derived(!info.repository?.toLowerCase().includes('immich'));
 </script>
 
 <Modal title={$t('about')} {onClose}>
   <ModalBody>
     <div class="flex flex-col sm:grid sm:grid-cols-2 gap-4">
-      {#if info.sourceRef === 'main' && info.repository === 'immich-app/immich'}
+      {#if showSourceDetails && info.sourceRef === 'main' && info.repository === 'immich-app/immich'}
         <Alert color="warning" title={$t('main_branch_warning')} class="col-span-full" size="small" />
       {/if}
 
-      <ServerAboutItem id="immich" title="Immich" version={info.version} versionHref={info.versionUrl} />
+      <ServerAboutItem id="photo" title="Photo" version={info.version} versionHref={info.versionUrl} />
       <ServerAboutItem id="exif" title="ExifTool" version={info.exiftool} />
       <ServerAboutItem id="nodejs" title="Node.js" version={info.nodejs} />
       <ServerAboutItem id="libvips" title="Libvips" version={info.libvips} />
@@ -39,7 +40,7 @@
         class={(info.ffmpeg?.length || 0) > 10 ? 'col-span-2' : ''}
       />
 
-      {#if info.repository && info.repositoryUrl}
+      {#if showSourceDetails && info.repository && info.repositoryUrl}
         <ServerAboutItem
           id="repository"
           title={$t('repository')}
@@ -48,7 +49,7 @@
         />
       {/if}
 
-      {#if info.sourceRef && info.sourceCommit && info.sourceUrl}
+      {#if showSourceDetails && info.sourceRef && info.sourceCommit && info.sourceUrl}
         <ServerAboutItem
           id="source"
           title={$t('source')}
@@ -57,11 +58,11 @@
         />
       {/if}
 
-      {#if info.build && info.buildUrl}
+      {#if showSourceDetails && info.build && info.buildUrl}
         <ServerAboutItem id="build" title={$t('build')} version={info.build} versionHref={info.buildUrl} />
       {/if}
 
-      {#if info.buildImage && info.buildImage}
+      {#if showSourceDetails && info.buildImage && info.buildImage}
         <ServerAboutItem
           id="build-image"
           title={$t('build_image')}

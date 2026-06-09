@@ -28,7 +28,6 @@ import { AssetTable } from 'src/schema/tables/asset.table';
 import {
   anyUuid,
   asUuid,
-  hasPeople,
   removeUndefinedKeys,
   recentlyAddedCutoff,
   truncatedDate,
@@ -37,13 +36,10 @@ import {
   withDefaultVisibility,
   withEdits,
   withExif,
-  withFaces,
-  withFacesAndPeople,
   withFilePath,
   withFiles,
   withLibrary,
   withOwner,
-  withSmartSearch,
   withTagId,
   withTags,
 } from 'src/utils/database';
@@ -79,7 +75,6 @@ interface AssetBuilderOptions {
   isDuplicate?: boolean;
   albumId?: string;
   tagId?: string;
-  personId?: string;
   userIds?: string[];
   withStacked?: boolean;
   exifInfo?: boolean;
@@ -142,11 +137,9 @@ interface AssetGetByChecksumOptions {
 
 interface GetByIdsRelations {
   exifInfo?: boolean;
-  faces?: { person?: boolean; withDeleted?: boolean };
   files?: boolean;
   library?: boolean;
   owner?: boolean;
-  smartSearch?: boolean;
   stack?: { assets?: boolean };
   tags?: boolean;
   edits?: boolean;
@@ -345,9 +338,7 @@ export class AssetRepository {
           removeUndefinedKeys(
             {
               duplicatesDetectedAt: eb.ref('excluded.duplicatesDetectedAt'),
-              facesRecognizedAt: eb.ref('excluded.facesRecognizedAt'),
               metadataExtractedAt: eb.ref('excluded.metadataExtractedAt'),
-              ocrAt: eb.ref('excluded.ocrAt'),
             },
             values[0],
           ),
@@ -494,7 +485,6 @@ export class AssetRepository {
     return this.db
       .selectFrom('asset')
       .selectAll('asset')
-      .select(withFacesAndPeople)
       .select(withTags)
       .$call(withExif)
       .where('asset.id', '=', anyUuid(ids))
@@ -579,17 +569,15 @@ export class AssetRepository {
   @GenerateSql({ params: [DummyValue.UUID] })
   getById(
     id: string,
-    { exifInfo, faces, files, library, owner, smartSearch, stack, tags, edits }: GetByIdsRelations = {},
+    { exifInfo, files, library, owner, stack, tags, edits }: GetByIdsRelations = {},
   ) {
     return this.db
       .selectFrom('asset')
       .selectAll('asset')
       .where('asset.id', '=', asUuid(id))
       .$if(!!exifInfo, withExif)
-      .$if(!!faces, (qb) => qb.select(faces?.person ? withFacesAndPeople : withFaces).$narrowType<{ faces: NotNull }>())
       .$if(!!library, (qb) => qb.select(withLibrary))
       .$if(!!owner, (qb) => qb.select(withOwner))
-      .$if(!!smartSearch, withSmartSearch)
       .$if(!!stack, (qb) =>
         qb
           .leftJoin('stack', 'stack.id', 'asset.stackId')
@@ -648,12 +636,11 @@ export class AssetRepository {
         .selectFrom('asset')
         .selectAll('asset')
         .$call(withExif)
-        .$call((qb) => qb.select(withFacesAndPeople))
         .$call((qb) => qb.select(withEdits))
         .executeTakeFirst();
     }
 
-    return this.getById(asset.id, { exifInfo: true, faces: { person: true }, edits: true });
+    return this.getById(asset.id, { exifInfo: true, edits: true });
   }
 
   async remove(asset: { id: string }): Promise<void> {
@@ -808,7 +795,6 @@ export class AssetRepository {
               .innerJoin('album_asset', 'asset.id', 'album_asset.assetId')
               .where('album_asset.albumId', '=', asUuid(options.albumId!)),
           )
-          .$if(!!options.personId, (qb) => hasPeople(qb, [options.personId!]))
           .$if(!!options.withStacked, (qb) =>
             qb
               .leftJoin('stack', (join) =>
@@ -908,7 +894,6 @@ export class AssetRepository {
               ),
             ),
           )
-          .$if(!!options.personId, (qb) => hasPeople(qb, [options.personId!]))
           .$if(!!options.userIds, (qb) => qb.where('asset.ownerId', '=', anyUuid(options.userIds!)))
           .$if(options.isFavorite !== undefined, (qb) => qb.where('asset.isFavorite', '=', options.isFavorite!))
           .$if(!!options.withStacked, (qb) =>
@@ -1259,17 +1244,6 @@ export class AssetRepository {
   }
 
   @GenerateSql({ params: [DummyValue.UUID] })
-  async getForOcr(id: string) {
-    return this.db
-      .selectFrom('asset')
-      .where('asset.id', '=', id)
-      .select(withEdits)
-      .innerJoin('asset_exif', (join) => join.onRef('asset_exif.assetId', '=', 'asset.id'))
-      .select(['asset_exif.exifImageWidth', 'asset_exif.exifImageHeight', 'asset_exif.orientation'])
-      .executeTakeFirst();
-  }
-
-  @GenerateSql({ params: [DummyValue.UUID] })
   async getForEdit(id: string) {
     return this.db
       .selectFrom('asset')
@@ -1292,17 +1266,6 @@ export class AssetRepository {
       .select('asset_exif.tags')
       .where('asset_exif.assetId', '=', id)
       .executeTakeFirst();
-  }
-
-  @GenerateSql({ params: [DummyValue.UUID] })
-  async getForFaces(id: string) {
-    return this.db
-      .selectFrom('asset')
-      .innerJoin('asset_exif', (join) => join.onRef('asset_exif.assetId', '=', 'asset.id'))
-      .select(['asset_exif.exifImageHeight', 'asset_exif.exifImageWidth', 'asset_exif.orientation'])
-      .select(withEdits)
-      .where('asset.id', '=', id)
-      .executeTakeFirstOrThrow();
   }
 
   @GenerateSql({ params: [DummyValue.UUID] })
